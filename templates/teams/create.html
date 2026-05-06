@@ -1,0 +1,328 @@
+{% extends 'base.html' %}
+{% block title %}Create Team — {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-6" x-data="teamBuilder()" x-init="init()">
+  
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between flex-wrap gap-4">
+    <div>
+      <h1 class="text-2xl font-black" style="font-family:Poppins;">Build Your <span class="gradient-text">Dream Team</span></h1>
+      <p class="text-sm text-gray-400 mt-1" style="font-family:Inter;">{{ tournament.name }} · Pick 6 within 60 credits</p>
+    </div>
+    <!-- Countdown -->
+    <div class="flex gap-2 items-center">
+      <i data-lucide="clock" class="w-4 h-4 text-yellow-400"></i>
+      <span class="text-sm font-medium text-yellow-400" x-text="timeLeft" style="font-family:Inter;"></span>
+    </div>
+  </div>
+  
+  <div class="flex flex-col lg:flex-row gap-6">
+    
+    <!-- LEFT: Player Pool -->
+    <div class="flex-1 min-w-0">
+      
+      <!-- Filters -->
+      <div class="glass-card-static rounded-2xl p-4 mb-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+            <input type="text" placeholder="Search players..." class="input-field pl-10 py-2 text-sm" x-model="search">
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <template x-for="t in ['all','Thunder XI','Storm XI']">
+              <button @click="teamF = t" :class="teamF === t ? 'bg-green-500/20 border-green-500/40 text-green-400' : 'border-white/10 text-gray-400'"
+                      class="px-3 py-2 rounded-xl border text-xs font-medium transition-all" x-text="t === 'all' ? 'All Teams' : t"></button>
+            </template>
+          </div>
+          <div class="flex gap-2">
+            <template x-for="r in ['all','BAT','BOWL','AR','WK']">
+              <button @click="roleF = r" :class="roleF === r ? 'bg-white/15 text-white' : 'text-gray-400'"
+                      class="px-2 py-2 rounded-xl border border-white/10 text-xs font-semibold transition-all" x-text="r === 'all' ? 'All' : r"></button>
+            </template>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Player list -->
+      <div class="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto scrollbar-custom pr-1">
+        {% for player in players %}
+        <div class="player-card-compact flex items-center gap-3"
+             :class="{
+               'selected': isSelected({{ player.id }}),
+               'disabled': isDisabled({{ player.id }}, {{ player.price }})
+             }"
+             x-show="shouldShow('{{ player.name|lower }}', '{{ player.team }}', '{{ player.role }}')"
+             @click="togglePlayer({{ player.id }}, '{{ player.name }}', '{{ player.team }}', '{{ player.role }}', {{ player.price }})">
+          
+          <!-- Avatar -->
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-black text-black"
+               style="background:linear-gradient(135deg,{% if player.role == 'BAT' %}#3b82f6,#1d4ed8{% elif player.role == 'BOWL' %}#ef4444,#991b1b{% elif player.role == 'AR' %}#a855f7,#6b21a8{% else %}#f97316,#c2410c{% endif %});">
+            {{ player.name|first|upper }}
+          </div>
+          
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="font-semibold text-sm truncate" style="font-family:Poppins;">{{ player.name }}</span>
+              <span class="px-1.5 py-0.5 rounded text-xs font-bold uppercase text-white flex-shrink-0
+                {% if player.role == 'BAT' %}badge-bat{% elif player.role == 'BOWL' %}badge-bowl{% elif player.role == 'AR' %}badge-ar{% else %}badge-wk{% endif %}">
+                {{ player.role }}
+              </span>
+            </div>
+            <div class="text-xs text-gray-500 flex items-center gap-2 mt-0.5" style="font-family:Inter;">
+              <span>{{ player.team }}</span>
+              <span>·</span>
+              <span>{{ player.playing_style }}</span>
+            </div>
+          </div>
+          
+          <!-- Price + action -->
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <span class="font-black text-sm" style="color:#ffd700;font-family:Poppins;">{{ player.price }}cr</span>
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
+                 :style="isSelected({{ player.id }}) ? 'background:rgba(0,230,118,0.2);' : 'background:rgba(255,255,255,0.06);'">
+              <template x-if="isSelected({{ player.id }})">
+                <i data-lucide="check" class="w-4 h-4 text-green-400"></i>
+              </template>
+              <template x-if="!isSelected({{ player.id }})">
+                <i data-lucide="plus" class="w-4 h-4 text-gray-400"></i>
+              </template>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    
+    <!-- RIGHT: Team Panel (sticky) -->
+    <div class="w-full lg:w-96 flex-shrink-0">
+      <div class="glass-card-static rounded-2xl p-5 sticky top-20">
+        
+        <!-- Team Name Input -->
+        <div class="mb-5">
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2" style="font-family:Inter;">Team Name</label>
+          <input type="text" placeholder="Enter team name..." class="input-field" x-model="teamName" maxlength="50">
+        </div>
+        
+        <!-- Progress -->
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider" style="font-family:Inter;">Players</span>
+          <span class="text-sm font-bold" style="font-family:Poppins;"><span x-text="selected.length" class="gradient-text"></span> / 6</span>
+        </div>
+        
+        <!-- Progress dots -->
+        <div class="flex gap-2 mb-4">
+          <template x-for="i in 6">
+            <div class="progress-dot flex-1" :class="i <= selected.length ? 'filled' : ''"></div>
+          </template>
+        </div>
+        
+        <!-- Budget -->
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider" style="font-family:Inter;">Budget</span>
+          <span class="text-sm font-bold" :class="totalPrice > 55 ? 'text-red-400' : 'text-white'" style="font-family:Poppins;">
+            <span x-text="totalPrice.toFixed(1)"></span> / 60 cr
+          </span>
+        </div>
+        <div class="rating-bar-bg mb-5">
+          <div class="rating-bar transition-all" :style="'width:' + Math.min((totalPrice/60)*100, 100) + '%;' + (totalPrice > 55 ? 'background:linear-gradient(90deg,#ef4444,#f97316)' : '')"></div>
+        </div>
+        
+        <!-- Selected Players List -->
+        <div class="space-y-2 mb-5 min-h-[200px]">
+          <template x-if="selected.length === 0">
+            <div class="flex items-center justify-center h-32 text-gray-600 text-sm" style="font-family:Inter;">
+              <div class="text-center">
+                <i data-lucide="plus-circle" class="w-10 h-10 mx-auto mb-2 opacity-30"></i>
+                <p>Select players from the pool</p>
+              </div>
+            </div>
+          </template>
+          
+          <template x-for="p in selected" :key="p.id">
+            <div class="flex items-center gap-2 p-2 rounded-xl border border-white/5 hover:border-white/10 transition-all"
+                 :style="p.id === captain ? 'border-color:rgba(255,215,0,0.4);background:rgba(255,215,0,0.05)' : p.id === viceCaptain ? 'border-color:rgba(192,192,192,0.3);background:rgba(192,192,192,0.03)' : ''">
+              
+              <!-- Captain/VC indicator -->
+              <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 text-xs font-black"
+                   :style="p.id === captain ? 'background:rgba(255,215,0,0.2);color:#ffd700' : p.id === viceCaptain ? 'background:rgba(192,192,192,0.15);color:#c0c0c0' : 'background:rgba(255,255,255,0.05);color:#8899aa'">
+                <span x-text="p.id === captain ? 'C' : p.id === viceCaptain ? 'V' : '#'"></span>
+              </div>
+              
+              <div class="flex-1 min-w-0">
+                <div class="text-xs font-semibold truncate" style="font-family:Poppins;" x-text="p.name"></div>
+                <div class="text-xs text-gray-600" style="font-family:Inter;" x-text="p.role + ' · ' + p.price + 'cr'"></div>
+              </div>
+              
+              <!-- C / VC / Remove buttons -->
+              <div class="flex gap-1 flex-shrink-0">
+                <button @click.stop="setCaptain(p.id)" 
+                        :class="p.id === captain ? 'bg-yellow-500/30 text-yellow-400 border-yellow-500/40' : 'bg-white/5 text-gray-500 border-white/10'"
+                        class="w-6 h-6 rounded border text-xs font-bold transition-all hover:border-yellow-500/40">C</button>
+                <button @click.stop="setViceCaptain(p.id)" 
+                        :class="p.id === viceCaptain ? 'bg-gray-400/20 text-gray-300 border-gray-400/40' : 'bg-white/5 text-gray-500 border-white/10'"
+                        class="w-6 h-6 rounded border text-xs font-bold transition-all">V</button>
+                <button @click.stop="removePlayer(p.id)" class="w-6 h-6 rounded border border-red-500/20 bg-red-500/5 text-red-400 text-xs flex items-center justify-center hover:bg-red-500/20 transition-all">×</button>
+              </div>
+            </div>
+          </template>
+        </div>
+        
+        <!-- Validation checklist -->
+        <div class="space-y-1 mb-5 p-3 rounded-xl" style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);">
+          <div class="flex items-center gap-2 text-xs" :class="selected.length === 6 ? 'text-green-400' : 'text-gray-500'" style="font-family:Inter;">
+            <span x-text="selected.length === 6 ? '✓' : '○'"></span> 6 players selected (<span x-text="selected.length"></span>/6)
+          </div>
+          <div class="flex items-center gap-2 text-xs" :class="totalPrice <= 60 ? 'text-green-400' : 'text-red-400'" style="font-family:Inter;">
+            <span x-text="totalPrice <= 60 ? '✓' : '✗'"></span> Budget ≤ 60 credits
+          </div>
+          <div class="flex items-center gap-2 text-xs" :class="captain ? 'text-green-400' : 'text-gray-500'" style="font-family:Inter;">
+            <span x-text="captain ? '✓' : '○'"></span> Captain assigned
+          </div>
+          <div class="flex items-center gap-2 text-xs" :class="viceCaptain ? 'text-green-400' : 'text-gray-500'" style="font-family:Inter;">
+            <span x-text="viceCaptain ? '✓' : '○'"></span> Vice Captain assigned
+          </div>
+          <div class="flex items-center gap-2 text-xs" :class="teamValid ? 'text-green-400' : 'text-gray-500'" style="font-family:Inter;">
+            <span x-text="teamValid ? '✓' : '○'"></span> Max 5 from one team
+          </div>
+        </div>
+        
+        <!-- Submit Button -->
+        <button @click="submitTeam()" :disabled="!canSubmit"
+                class="btn-primary w-full justify-center text-sm py-3"
+                :class="canSubmit ? '' : 'opacity-40 cursor-not-allowed'">
+          <i data-lucide="shield-check" class="w-4 h-4"></i>
+          <span>Create Team</span>
+        </button>
+        
+        <!-- Error messages -->
+        <template x-if="errors.length > 0">
+          <div class="mt-3 p-3 rounded-xl" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);">
+            <template x-for="err in errors">
+              <p class="text-red-400 text-xs" x-text="err" style="font-family:Inter;"></p>
+            </template>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function teamBuilder() {
+  return {
+    selected: [],
+    captain: null,
+    viceCaptain: null,
+    teamName: '',
+    search: '',
+    teamF: 'all',
+    roleF: 'all',
+    errors: [],
+    timeLeft: '',
+    deadline: new Date('{{ tournament.deadline|date:"c" }}'),
+    
+    init() {
+      this.updateTime();
+      setInterval(() => this.updateTime(), 1000);
+      this.$watch('selected', () => {
+        if (this.captain && !this.selected.find(p => p.id === this.captain)) this.captain = null;
+        if (this.viceCaptain && !this.selected.find(p => p.id === this.viceCaptain)) this.viceCaptain = null;
+        setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 50);
+      });
+    },
+    
+    updateTime() {
+      const diff = this.deadline - new Date();
+      if (diff <= 0) { this.timeLeft = 'Selection Closed'; return; }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      this.timeLeft = `${h}h ${m}m ${s}s remaining`;
+    },
+    
+    shouldShow(name, team, role) {
+      const ms = !this.search || name.includes(this.search.toLowerCase());
+      const mt = this.teamF === 'all' || team === this.teamF;
+      const mr = this.roleF === 'all' || role === this.roleF;
+      return ms && mt && mr;
+    },
+    
+    isSelected(id) { return this.selected.some(p => p.id === id); },
+    
+    isDisabled(id, price) {
+      if (this.isSelected(id)) return false;
+      if (this.selected.length >= 6) return true;
+      if (this.totalPrice + price > 60) return true;
+      return false;
+    },
+    
+    get totalPrice() { return this.selected.reduce((sum, p) => sum + parseFloat(p.price), 0); },
+    
+    get teamValid() {
+      const thunder = this.selected.filter(p => p.team === 'Thunder XI').length;
+      const storm = this.selected.filter(p => p.team === 'Storm XI').length;
+      return thunder <= 5 && storm <= 5;
+    },
+    
+    get canSubmit() {
+      return this.selected.length === 6 && this.totalPrice <= 60 && 
+             this.captain && this.viceCaptain && this.teamValid && this.teamName.trim().length > 0;
+    },
+    
+    togglePlayer(id, name, team, role, price) {
+      if (this.isSelected(id)) {
+        this.removePlayer(id);
+      } else if (!this.isDisabled(id, price)) {
+        this.selected.push({id, name, team, role, price: parseFloat(price)});
+      }
+    },
+    
+    removePlayer(id) {
+      this.selected = this.selected.filter(p => p.id !== id);
+    },
+    
+    setCaptain(id) {
+      if (this.captain === id) { this.captain = null; return; }
+      if (this.viceCaptain === id) this.viceCaptain = null;
+      this.captain = id;
+    },
+    
+    setViceCaptain(id) {
+      if (this.viceCaptain === id) { this.viceCaptain = null; return; }
+      if (this.captain === id) this.captain = null;
+      this.viceCaptain = id;
+    },
+    
+    async submitTeam() {
+      this.errors = [];
+      const payload = {
+        team_name: this.teamName,
+        players: this.selected.map(p => p.id),
+        captain: this.captain,
+        vice_captain: this.viceCaptain,
+      };
+      
+      const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+      try {
+        const res = await fetch(window.location.pathname, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          window.location.href = data.redirect;
+        } else {
+          this.errors = data.errors || ['Something went wrong.'];
+        }
+      } catch (e) {
+        this.errors = ['Network error. Please try again.'];
+      }
+    }
+  }
+}
+</script>
+{% csrf_token %}
+{% endblock %}

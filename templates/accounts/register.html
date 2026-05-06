@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Register — Fantasy Super 6{% endblock %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 cricket-bg cricket-field-pattern">
+  
+  <div class="fixed inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 right-1/4 w-64 h-64 rounded-full opacity-5" style="background:radial-gradient(circle,#ffd700,transparent);filter:blur(50px);"></div>
+    <div class="absolute bottom-1/4 left-1/4 w-80 h-80 rounded-full opacity-4" style="background:radial-gradient(circle,#00e676,transparent);filter:blur(60px);"></div>
+  </div>
+  
+  <div class="relative z-10 w-full max-w-md">
+    
+    <div class="text-center mb-8">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style="background:linear-gradient(135deg,#00e676,#00bcd4);">
+        <span style="font-size:28px;">⚡</span>
+      </div>
+      <h1 class="text-3xl font-black gradient-text" style="font-family:Poppins;">Join the Game</h1>
+      <p class="text-gray-400 mt-2 text-sm" style="font-family:Inter;">Create your account and start picking teams!</p>
+    </div>
+    
+    <div class="glass-card-static p-8 rounded-2xl" x-data="registerForm()">
+      <h2 class="text-xl font-bold mb-6" style="font-family:Poppins;">Create Account</h2>
+      
+      <form method="post" class="space-y-4" @submit="validate">
+        {% csrf_token %}
+        
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2" style="font-family:Inter;">Username</label>
+          <div class="relative">
+            <i data-lucide="at-sign" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+            <input type="text" name="username" required
+                   class="input-field pl-11" placeholder="cool_username"
+                   @input="checkUsername($event.target.value)">
+          </div>
+          <p class="text-xs mt-1 transition-colors" :class="usernameOk ? 'text-green-400' : 'text-gray-500'" x-text="usernameMsg" style="font-family:Inter;"></p>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2" style="font-family:Inter;">Email</label>
+          <div class="relative">
+            <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+            <input type="email" name="email" required
+                   class="input-field pl-11" placeholder="you@example.com">
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2" style="font-family:Inter;">Password</label>
+          <div class="relative">
+            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+            <input type="password" name="password" required
+                   class="input-field pl-11" placeholder="min. 6 characters"
+                   @input="checkStrength($event.target.value)">
+          </div>
+          <!-- Strength indicator -->
+          <div class="mt-2 space-y-1" x-show="password.length > 0">
+            <div class="flex gap-1">
+              <div class="h-1 flex-1 rounded-full transition-all" :style="strength >= 1 ? 'background:#ef4444' : 'background:rgba(255,255,255,0.1)'"></div>
+              <div class="h-1 flex-1 rounded-full transition-all" :style="strength >= 2 ? 'background:#f97316' : 'background:rgba(255,255,255,0.1)'"></div>
+              <div class="h-1 flex-1 rounded-full transition-all" :style="strength >= 3 ? 'background:#ffd700' : 'background:rgba(255,255,255,0.1)'"></div>
+              <div class="h-1 flex-1 rounded-full transition-all" :style="strength >= 4 ? 'background:#00e676' : 'background:rgba(255,255,255,0.1)'"></div>
+            </div>
+            <p class="text-xs" :class="strengthColor" x-text="strengthLabel" style="font-family:Inter;"></p>
+          </div>
+        </div>
+        
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2" style="font-family:Inter;">Confirm Password</label>
+          <div class="relative">
+            <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500"></i>
+            <input type="password" name="password2" required
+                   class="input-field pl-11" placeholder="repeat password"
+                   @input="checkMatch($event.target.value)">
+          </div>
+          <p class="text-xs mt-1 text-red-400" x-show="!passwordMatch && password2.length > 0" style="font-family:Inter;">Passwords don't match</p>
+        </div>
+        
+        <button type="submit" class="btn-primary w-full justify-center text-base py-3 mt-2">
+          <i data-lucide="user-plus" class="w-5 h-5"></i> Create Account
+        </button>
+      </form>
+      
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500" style="font-family:Inter;">
+          Already have an account? 
+          <a href="/login/" class="font-semibold transition-colors" style="color:#00e676;">Sign in →</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function registerForm() {
+  return {
+    password: '', password2: '', strength: 0, passwordMatch: true,
+    usernameOk: false, usernameMsg: '', strengthLabel: '', strengthColor: 'text-gray-400',
+    checkUsername(v) {
+      if (v.length < 3) { this.usernameMsg = 'Too short'; this.usernameOk = false; }
+      else if (/\s/.test(v)) { this.usernameMsg = 'No spaces allowed'; this.usernameOk = false; }
+      else { this.usernameMsg = '✓ Looks good'; this.usernameOk = true; }
+    },
+    checkStrength(v) {
+      this.password = v;
+      let s = 0;
+      if (v.length >= 6) s++;
+      if (v.length >= 10) s++;
+      if (/[A-Z]/.test(v) || /[0-9]/.test(v)) s++;
+      if (/[^A-Za-z0-9]/.test(v)) s++;
+      this.strength = s;
+      const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+      const colors = ['', 'text-red-400', 'text-orange-400', 'text-yellow-400', 'text-green-400'];
+      this.strengthLabel = labels[s] || '';
+      this.strengthColor = colors[s] || 'text-gray-400';
+    },
+    checkMatch(v) {
+      this.password2 = v;
+      this.passwordMatch = v === this.password;
+    }
+  }
+}
+</script>
+{% endblock %}

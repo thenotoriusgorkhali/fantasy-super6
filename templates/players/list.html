@@ -1,0 +1,501 @@
+{% extends 'base.html' %}
+{% block title %}Players — Fantasy Super 6{% endblock %}
+
+{% block content %}
+
+<style>
+  /* ── Page background ── */
+  .players-bg {
+    background: #060d1a;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  .bg-orb-green {
+    position: fixed; top: -200px; left: -200px;
+    width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,230,118,0.07) 0%, transparent 70%);
+    filter: blur(60px); pointer-events: none; z-index: 0;
+    animation: orb-drift 24s ease-in-out infinite;
+  }
+  .bg-orb-gold {
+    position: fixed; bottom: -200px; right: -200px;
+    width: 600px; height: 600px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,215,0,0.05) 0%, transparent 70%);
+    filter: blur(70px); pointer-events: none; z-index: 0;
+    animation: orb-drift-reverse 28s ease-in-out infinite;
+  }
+  @keyframes orb-drift {
+    0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(40px,-30px) scale(1.05)}
+  }
+  @keyframes orb-drift-reverse {
+    0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-30px,40px) scale(0.95)}
+  }
+
+  /* ── Search bar ── */
+  .search-bar {
+    width: 100%;
+    height: 56px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px;
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    padding: 0 20px 0 52px;
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+  }
+  .search-bar::placeholder { color: rgba(136,153,170,0.6); }
+  .search-bar:focus {
+    border-color: rgba(0,230,118,0.5);
+    background: rgba(255,255,255,0.07);
+    box-shadow: 0 0 0 3px rgba(0,230,118,0.1), 0 0 30px rgba(0,230,118,0.08);
+  }
+
+  /* ── Filter pills ── */
+  .fpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 8px 18px; border-radius: 999px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #8899aa;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .fpill:hover { border-color: rgba(0,230,118,0.45); color: #fff; }
+  .fpill.active {
+    background: linear-gradient(135deg, #00e676, #00bcd4);
+    color: #000; font-weight: 700; border-color: transparent;
+    box-shadow: 0 4px 20px rgba(0,230,118,0.4);
+  }
+
+  /* ── Player card ── */
+  .pcard {
+    background: linear-gradient(145deg, rgba(13,31,53,0.97), rgba(6,13,26,0.99));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(.4,0,.2,1),
+                border-color 0.35s ease,
+                box-shadow 0.35s ease;
+    cursor: pointer;
+    position: relative;
+    display: flex; flex-direction: column;
+  }
+  .pcard:hover {
+    transform: translateY(-8px);
+    border-color: rgba(0,230,118,0.4);
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.55),
+      0 0 0 1px rgba(0,230,118,0.18),
+      0 0 50px rgba(0,230,118,0.08);
+  }
+  .pcard:hover .card-footer { background: rgba(0,230,118,0.07); }
+  .pcard:hover .view-arrow { transform: translateX(4px); }
+
+  /* Color strips */
+  .strip-bat  { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+  .strip-bowl { background: linear-gradient(90deg, #ef4444, #f87171); }
+  .strip-ar   { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+  .strip-wk   { background: linear-gradient(90deg, #f97316, #fb923c); }
+
+  /* Avatar */
+  .avatar-ring-bat  { border-color: #3b82f6; }
+  .avatar-ring-bowl { border-color: #ef4444; }
+  .avatar-ring-ar   { border-color: #8b5cf6; }
+  .avatar-ring-wk   { border-color: #f97316; }
+
+  .avatar-bg-bat  { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .avatar-bg-bowl { background: linear-gradient(135deg, #ef4444, #991b1b); }
+  .avatar-bg-ar   { background: linear-gradient(135deg, #8b5cf6, #6b21a8); }
+  .avatar-bg-wk   { background: linear-gradient(135deg, #f97316, #c2410c); }
+
+  /* Rating bars */
+  .rbar-bg { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; flex: 1; }
+  .rbar-bat   { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #3b82f6, #22d3ee); transition: width 1s ease; }
+  .rbar-bowl  { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #ef4444, #fb923c); transition: width 1s ease; }
+  .rbar-field { height: 6px; border-radius: 3px; background: linear-gradient(90deg, #8b5cf6, #ec4899); transition: width 1s ease; }
+
+  /* Role badge */
+  .rbadge {
+    display: inline-flex; align-items: center;
+    padding: 3px 10px; border-radius: 6px;
+    font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid;
+  }
+  .rbadge-bat  { background: rgba(59,130,246,0.15);  color: #60a5fa;  border-color: rgba(59,130,246,0.3); }
+  .rbadge-bowl { background: rgba(239,68,68,0.15);   color: #f87171;  border-color: rgba(239,68,68,0.3); }
+  .rbadge-ar   { background: rgba(139,92,246,0.15);  color: #a78bfa;  border-color: rgba(139,92,246,0.3); }
+  .rbadge-wk   { background: rgba(249,115,22,0.15);  color: #fb923c;  border-color: rgba(249,115,22,0.3); }
+
+  /* Style tag */
+  .style-attacking { background: rgba(249,115,22,0.1);  border: 1px solid rgba(249,115,22,0.2);  color: #fb923c; }
+  .style-defensive { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.18); color: #60a5fa; }
+  .style-balanced  { background: rgba(0,230,118,0.08);  border: 1px solid rgba(0,230,118,0.18);  color: #00e676; }
+
+  /* Stat chip */
+  .schip {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 6px 10px;
+    text-align: center;
+    flex: 1;
+  }
+
+  /* Card footer */
+  .card-footer {
+    border-top: 1px solid rgba(255,255,255,0.07);
+    padding: 12px 20px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.25s ease;
+  }
+  .view-arrow { display: inline-block; transition: transform 0.25s ease; }
+
+  /* Card stagger animation */
+  @keyframes card-in {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .pcard { animation: card-in 0.5s ease both; }
+
+  /* Empty state */
+  @keyframes fade-in { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .empty-state { animation: fade-in 0.4s ease; }
+</style>
+
+<div class="players-bg">
+  <div class="bg-orb-green"></div>
+  <div class="bg-orb-gold"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+       x-data="playerPool()" x-init="init()">
+
+    <!-- ── PAGE HEADER ── -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10">
+      <div>
+        <h1 style="font-family:Poppins;font-weight:800;font-size:clamp(2.4rem,5vw,3.5rem);line-height:1.1;margin-bottom:8px;">
+          <span style="background:linear-gradient(135deg,#00e676,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Player</span>
+          <span style="color:#fff;"> Pool</span>
+        </h1>
+        <p style="font-family:Inter;font-size:15px;color:#8899aa;">
+          Browse all {{ players|length }} players across both teams
+        </p>
+      </div>
+      <div style="display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:14px;
+                  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);
+                  font-family:Inter;font-size:13px;font-weight:600;color:#8899aa;flex-shrink:0;">
+        <i data-lucide="users" class="w-4 h-4" style="color:#00e676;"></i>
+        {{ players|length }} Players &nbsp;•&nbsp; 2 Teams
+      </div>
+    </div>
+
+    <!-- ── SEARCH BAR ── -->
+    <div class="relative mb-5">
+      <i data-lucide="search" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2"
+         style="color:#8899aa;pointer-events:none;z-index:1;"></i>
+      <input
+        type="text"
+        class="search-bar"
+        placeholder="Search players by name..."
+        x-model.debounce.200ms="search"
+        autocomplete="off"
+      >
+      <!-- Clear button -->
+      <button x-show="search.length > 0" @click="search = ''"
+              class="absolute right-4 top-1/2 -translate-y-1/2 transition-opacity"
+              style="color:#8899aa;background:none;border:none;cursor:pointer;padding:4px;">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- ── FILTERS ── -->
+    <div class="flex flex-col sm:flex-row gap-4 mb-6 flex-wrap">
+
+      <!-- Team filter -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:0.14em;
+                     color:#8899aa;text-transform:uppercase;width:36px;flex-shrink:0;">TEAM</span>
+        <button class="fpill" :class="teamFilter==='all' && 'active'" @click="setTeam('all')">
+          All Teams
+        </button>
+        <button class="fpill" :class="teamFilter==='Thunder XI' && 'active'" @click="setTeam('Thunder XI')">
+          ⚡ Thunder XI
+        </button>
+        <button class="fpill" :class="teamFilter==='Storm XI' && 'active'" @click="setTeam('Storm XI')">
+          🌩️ Storm XI
+        </button>
+      </div>
+
+      <!-- Divider (desktop) -->
+      <div class="hidden sm:block" style="width:1px;background:rgba(255,255,255,0.07);align-self:stretch;margin:0 4px;"></div>
+
+      <!-- Role filter -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:0.14em;
+                     color:#8899aa;text-transform:uppercase;width:36px;flex-shrink:0;">ROLE</span>
+        <button class="fpill" :class="roleFilter==='all' && 'active'" @click="setRole('all')">All</button>
+        <button class="fpill" :class="roleFilter==='BAT' && 'active'" @click="setRole('BAT')">🏏 BAT</button>
+        <button class="fpill" :class="roleFilter==='BOWL' && 'active'" @click="setRole('BOWL')">🎯 BOWL</button>
+        <button class="fpill" :class="roleFilter==='AR' && 'active'" @click="setRole('AR')">⚡ AR</button>
+        <button class="fpill" :class="roleFilter==='WK' && 'active'" @click="setRole('WK')">🧤 WK</button>
+      </div>
+    </div>
+
+    <!-- ── RESULTS COUNT ── -->
+    <div class="mb-6 flex items-center justify-between">
+      <p style="font-family:Inter;font-size:13px;color:#8899aa;">
+        Showing
+        <span x-text="visibleCount" style="color:#fff;font-weight:700;">{{ players|length }}</span>
+        players
+      </p>
+      <!-- Reset filters (shown when active) -->
+      <button x-show="teamFilter!=='all' || roleFilter!=='all' || search!==''"
+              @click="reset()"
+              style="font-family:Inter;font-size:12px;font-weight:600;color:#00e676;
+                     background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:4px;
+                     opacity:0.8;transition:opacity 0.2s;"
+              onmouseover="this.style.opacity='1'"
+              onmouseout="this.style.opacity='0.8'">
+        <i data-lucide="rotate-ccw" class="w-3 h-3"></i> Reset filters
+      </button>
+    </div>
+
+    <!-- ── PLAYER GRID ── -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" id="playerGrid">
+
+      {% for player in players %}
+      <div
+        class="pcard"
+        style="animation-delay: {{ forloop.counter0 }}00ms; animation-fill-mode: both;"
+        x-show="matchesFilters('{{ player.team }}', '{{ player.role }}', '{{ player.name|lower }}')"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-4"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        @click="window.location='/players/{{ player.id }}/'"
+      >
+        <!-- TOP COLOR STRIP -->
+        <div style="height:4px;" class="
+          {% if player.role == 'BAT' %}strip-bat
+          {% elif player.role == 'BOWL' %}strip-bowl
+          {% elif player.role == 'AR' %}strip-ar
+          {% else %}strip-wk{% endif %}
+        "></div>
+
+        <!-- CARD BODY -->
+        <div style="padding:20px;flex:1;display:flex;flex-direction:column;gap:16px;">
+
+          <!-- ROW 1: Avatar + Credits -->
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+
+            <!-- Avatar -->
+            <div style="position:relative;flex-shrink:0;">
+              {% if player.profile_image %}
+              <img src="{{ player.profile_image.url }}"
+                   style="width:80px;height:80px;border-radius:50%;object-fit:cover;object-position:top;
+                          border:3px solid;
+                          {% if player.role == 'BAT' %}border-color:#3b82f6;
+                          {% elif player.role == 'BOWL' %}border-color:#ef4444;
+                          {% elif player.role == 'AR' %}border-color:#8b5cf6;
+                          {% else %}border-color:#f97316;{% endif %}
+                          box-shadow:0 0 20px rgba({% if player.role == 'BAT' %}59,130,246{% elif player.role == 'BOWL' %}239,68,68{% elif player.role == 'AR' %}139,92,246{% else %}249,115,22{% endif %},0.3);"
+                   alt="{{ player.name }}">
+              {% else %}
+              <div style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;
+                          justify-content:center;border:3px solid;
+                          {% if player.role == 'BAT' %}border-color:#3b82f6;background:linear-gradient(135deg,rgba(59,130,246,0.25),rgba(29,78,216,0.35));
+                          {% elif player.role == 'BOWL' %}border-color:#ef4444;background:linear-gradient(135deg,rgba(239,68,68,0.25),rgba(153,27,27,0.35));
+                          {% elif player.role == 'AR' %}border-color:#8b5cf6;background:linear-gradient(135deg,rgba(139,92,246,0.25),rgba(107,33,168,0.35));
+                          {% else %}border-color:#f97316;background:linear-gradient(135deg,rgba(249,115,22,0.25),rgba(194,65,12,0.35));{% endif %}
+                          box-shadow:0 0 24px rgba({% if player.role == 'BAT' %}59,130,246{% elif player.role == 'BOWL' %}239,68,68{% elif player.role == 'AR' %}139,92,246{% else %}249,115,22{% endif %},0.25);">
+                <span style="font-family:Poppins;font-weight:800;font-size:1.75rem;color:#fff;">
+                  {{ player.name|first|upper }}
+                </span>
+              </div>
+              {% endif %}
+              <!-- Jersey badge -->
+              {% if player.jersey_number %}
+              <div style="position:absolute;bottom:-2px;right:-2px;width:24px;height:24px;border-radius:50%;
+                          display:flex;align-items:center;justify-content:center;
+                          font-family:Inter;font-size:9px;font-weight:800;color:#fff;
+                          border:2px solid #060d1a;
+                          {% if player.role == 'BAT' %}background:#3b82f6;
+                          {% elif player.role == 'BOWL' %}background:#ef4444;
+                          {% elif player.role == 'AR' %}background:#8b5cf6;
+                          {% else %}background:#f97316;{% endif %}">
+                {{ player.jersey_number }}
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Credits -->
+            <div style="text-align:right;">
+              <div style="font-family:Poppins;font-weight:800;font-size:1.6rem;line-height:1;
+                          color:#ffd700;filter:drop-shadow(0 0 8px rgba(255,215,0,0.35));">
+                {{ player.price }}
+              </div>
+              <div style="font-family:Inter;font-size:9px;font-weight:700;letter-spacing:0.14em;
+                          color:#8899aa;text-transform:uppercase;margin-top:4px;">Credits</div>
+            </div>
+          </div>
+
+          <!-- ROW 2: Name + Badges -->
+          <div>
+            <div style="font-family:Poppins;font-weight:700;font-size:1.05rem;color:#fff;
+                        margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {{ player.name }}
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+              <!-- Role badge -->
+              <span class="rbadge {% if player.role == 'BAT' %}rbadge-bat{% elif player.role == 'BOWL' %}rbadge-bowl{% elif player.role == 'AR' %}rbadge-ar{% else %}rbadge-wk{% endif %}">
+                {{ player.get_role_display }}
+              </span>
+              <!-- Team badge -->
+              <span style="font-family:Inter;font-size:11px;font-weight:500;color:#8899aa;
+                           background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.11);
+                           border-radius:6px;padding:2px 8px;">
+                {{ player.team }}
+              </span>
+            </div>
+            <!-- Style tag -->
+            <span class="style-{% if player.playing_style == 'Attacking' %}attacking{% elif player.playing_style == 'Defensive' %}defensive{% else %}balanced{% endif %}"
+                  style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;
+                         font-family:Inter;font-size:11px;font-weight:600;">
+              {% if player.playing_style == 'Attacking' %}🔥{% elif player.playing_style == 'Defensive' %}🛡️{% else %}⚖️{% endif %}
+              {{ player.playing_style }}
+            </span>
+          </div>
+
+          <!-- ROW 3: Rating Bars -->
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-family:Inter;font-size:11px;font-weight:600;color:#8899aa;width:30px;">Bat</span>
+              <div class="rbar-bg"><div class="rbar-bat" style="width:{{ player.batting_rating|floatformat:0 }}0%;"></div></div>
+              <span style="font-family:Inter;font-size:11px;font-weight:700;color:#fff;width:26px;text-align:right;">{{ player.batting_rating|floatformat:1 }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-family:Inter;font-size:11px;font-weight:600;color:#8899aa;width:30px;">Bowl</span>
+              <div class="rbar-bg"><div class="rbar-bowl" style="width:{{ player.bowling_rating|floatformat:0 }}0%;"></div></div>
+              <span style="font-family:Inter;font-size:11px;font-weight:700;color:#fff;width:26px;text-align:right;">{{ player.bowling_rating|floatformat:1 }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-family:Inter;font-size:11px;font-weight:600;color:#8899aa;width:30px;">Field</span>
+              <div class="rbar-bg"><div class="rbar-field" style="width:{{ player.fielding_rating|floatformat:0 }}0%;"></div></div>
+              <span style="font-family:Inter;font-size:11px;font-weight:700;color:#fff;width:26px;text-align:right;">{{ player.fielding_rating|floatformat:1 }}</span>
+            </div>
+          </div>
+
+          <!-- ROW 4: Key Stats -->
+          <div style="display:flex;gap:8px;">
+            <div class="schip">
+              <div style="font-family:Poppins;font-weight:700;font-size:0.95rem;color:#fff;line-height:1;">{{ player.matches_played }}</div>
+              <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.08em;color:#8899aa;text-transform:uppercase;margin-top:3px;">Matches</div>
+            </div>
+            <div class="schip">
+              <div style="font-family:Poppins;font-weight:700;font-size:0.95rem;color:#fff;line-height:1;">
+                {% if player.average > 0 %}{{ player.average|floatformat:1 }}{% else %}—{% endif %}
+              </div>
+              <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.08em;color:#8899aa;text-transform:uppercase;margin-top:3px;">Avg</div>
+            </div>
+            <div class="schip">
+              <div style="font-family:Poppins;font-weight:700;font-size:0.95rem;color:#fff;line-height:1;">
+                {% if player.role == 'BOWL' and player.total_wickets > 0 %}{{ player.total_wickets }}W
+                {% elif player.strike_rate > 0 %}{{ player.strike_rate|floatformat:0 }}
+                {% else %}—{% endif %}
+              </div>
+              <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.08em;color:#8899aa;text-transform:uppercase;margin-top:3px;">
+                {% if player.role == 'BOWL' %}Wkts{% else %}SR{% endif %}
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /card body -->
+
+        <!-- CARD FOOTER: View Profile -->
+        <a href="/players/{{ player.id }}/"
+           class="card-footer"
+           @click.stop
+           style="text-decoration:none;">
+          <span style="font-family:Inter;font-size:13px;font-weight:600;color:#00e676;
+                       display:flex;align-items:center;gap:6px;">
+            View Profile
+            <span class="view-arrow">→</span>
+          </span>
+        </a>
+      </div>
+      {% endfor %}
+
+    </div><!-- /grid -->
+
+    <!-- ── EMPTY STATE ── -->
+    <div x-show="visibleCount === 0" class="empty-state"
+         style="text-align:center;padding:80px 20px;">
+      <div style="font-size:4rem;margin-bottom:16px;">🏏</div>
+      <h3 style="font-family:Poppins;font-weight:700;font-size:1.4rem;color:#fff;margin-bottom:8px;">
+        No players found
+      </h3>
+      <p style="font-family:Inter;font-size:14px;color:#8899aa;margin-bottom:24px;">
+        Try adjusting your filters or search term
+      </p>
+      <button @click="reset()"
+              style="background:linear-gradient(135deg,#00e676,#00bcd4);color:#000;
+                     font-family:Poppins;font-weight:700;font-size:14px;
+                     padding:12px 28px;border-radius:12px;border:none;cursor:pointer;
+                     transition:transform 0.2s ease,box-shadow 0.2s ease;
+                     box-shadow:0 4px 20px rgba(0,230,118,0.3);"
+              onmouseover="this.style.transform='scale(1.03)'"
+              onmouseout="this.style.transform='scale(1)'">
+        Reset Filters
+      </button>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /players-bg -->
+
+<script>
+function playerPool() {
+  return {
+    search: '',
+    teamFilter: 'all',
+    roleFilter: 'all',
+    visibleCount: {{ players|length }},
+
+    init() {
+      this.$watch('search',     () => this.$nextTick(() => this.updateCount()));
+      this.$watch('teamFilter', () => this.$nextTick(() => this.updateCount()));
+      this.$watch('roleFilter', () => this.$nextTick(() => this.updateCount()));
+      // Init Lucide icons after Alpine renders
+      setTimeout(() => { if (typeof lucide !== 'undefined') lucide.createIcons(); }, 80);
+    },
+
+    setTeam(val) { this.teamFilter = val; },
+    setRole(val) { this.roleFilter = val; },
+    reset()      { this.search = ''; this.teamFilter = 'all'; this.roleFilter = 'all'; },
+
+    matchesFilters(playerTeam, playerRole, playerName) {
+      const matchTeam   = this.teamFilter === 'all' || playerTeam === this.teamFilter;
+      const matchRole   = this.roleFilter === 'all' || playerRole === this.roleFilter;
+      const matchSearch = this.search === '' ||
+                          playerName.toLowerCase().includes(this.search.toLowerCase());
+      return matchTeam && matchRole && matchSearch;
+    },
+
+    updateCount() {
+      const cards = document.querySelectorAll('#playerGrid > div[x-show]');
+      let count = 0;
+      cards.forEach(card => {
+        if (card.style.display !== 'none') count++;
+      });
+      this.visibleCount = count;
+    }
+  }
+}
+</script>
+
+{% endblock %}

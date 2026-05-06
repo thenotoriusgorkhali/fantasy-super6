@@ -1,0 +1,536 @@
+{% extends 'base.html' %}
+{% block title %}{{ player.name }} — Fantasy Super 6{% endblock %}
+
+{% block content %}
+
+<style>
+  /* Role-specific accent colors */
+  {% if player.role == 'BAT' %}
+  :root { --role-a: #3b82f6; --role-b: #1d4ed8; --role-glow: rgba(59,130,246,0.25); }
+  {% elif player.role == 'BOWL' %}
+  :root { --role-a: #ef4444; --role-b: #991b1b; --role-glow: rgba(239,68,68,0.22); }
+  {% elif player.role == 'AR' %}
+  :root { --role-a: #a855f7; --role-b: #6b21a8; --role-glow: rgba(168,85,247,0.22); }
+  {% else %}
+  :root { --role-a: #f97316; --role-b: #c2410c; --role-glow: rgba(249,115,22,0.22); }
+  {% endif %}
+
+  /* Hero banner */
+  .player-hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #0a1628 0%, #060d1a 100%);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    min-height: 420px;
+  }
+
+  /* Giant ambient blob behind photo */
+  .hero-blob {
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--role-glow) 0%, transparent 70%);
+    filter: blur(60px);
+    pointer-events: none;
+  }
+
+  /* Photo frame */
+  .photo-frame {
+    position: relative;
+    flex-shrink: 0;
+  }
+  .photo-ring {
+    position: absolute; inset: -4px;
+    border-radius: 28px;
+    background: linear-gradient(135deg, var(--role-a), var(--role-b));
+    z-index: 0;
+  }
+  .photo-inner {
+    position: relative; z-index: 1;
+    width: 200px; height: 240px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--role-a), var(--role-b));
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  @media (max-width: 640px) {
+    .photo-inner { width: 140px; height: 170px; border-radius: 18px; }
+  }
+
+  /* Jersey badge */
+  .jersey-badge {
+    position: absolute;
+    bottom: -12px; right: -12px;
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: #060d1a;
+    border: 2px solid rgba(255,255,255,0.12);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 800; font-size: 13px;
+    color: #fff; z-index: 2;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+
+  /* Animated SVG ring */
+  @keyframes ring-draw {
+    from { stroke-dashoffset: 100; }
+    to   { stroke-dashoffset: 0; }
+  }
+  .ring-path {
+    stroke-dasharray: var(--dash, 0) 100;
+    stroke-dashoffset: 0;
+    transition: stroke-dasharray 1.2s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* Stat value count-up */
+  @keyframes pop-in {
+    0%   { transform: scale(0.7); opacity: 0; }
+    70%  { transform: scale(1.05); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .stat-pop { animation: pop-in 0.5s cubic-bezier(.22,1,.36,1) both; }
+
+  /* Info pill */
+  .info-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 14px; border-radius: 999px;
+    font-family: 'Inter', sans-serif; font-size: 11px;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #8899aa;
+  }
+
+  /* Role badge */
+  .role-pill {
+    display: inline-flex; align-items: center;
+    padding: 6px 16px; border-radius: 10px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700; font-size: 12px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    background: linear-gradient(135deg, var(--role-a), var(--role-b));
+    color: #fff;
+    box-shadow: 0 4px 16px var(--role-glow);
+  }
+
+  /* Stat card */
+  .stat-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 16px;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .stat-card:hover {
+    background: rgba(255,255,255,0.055);
+    border-color: rgba(255,255,255,0.12);
+  }
+
+  /* Section card */
+  .section-card {
+    background: rgba(13,31,53,0.75);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 20px;
+  }
+
+  /* Thin gradient divider */
+  .grad-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  }
+
+  /* Highlight bar on table row */
+  tbody tr:hover { background: rgba(255,255,255,0.025); }
+
+  /* Price glow */
+  .price-glow {
+    background: linear-gradient(135deg, #ffd700, #ff8f00);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(255,215,0,0.35));
+  }
+</style>
+
+<!-- ════════════════════════════════════════ -->
+<!--  HERO BANNER                            -->
+<!-- ════════════════════════════════════════ -->
+<div class="player-hero">
+  <!-- Ambient blob -->
+  <div class="hero-blob"></div>
+
+  <!-- Subtle grid overlay -->
+  <div class="absolute inset-0 pointer-events-none"
+       style="background-image:repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,0.018) 40px),
+                                repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,0.018) 40px);"></div>
+
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex flex-col sm:flex-row items-center sm:items-end gap-8">
+
+    <!-- ── PHOTO ── -->
+    <div class="photo-frame">
+      <div class="photo-ring"></div>
+      <div class="photo-inner">
+        {% if player.profile_image %}
+          <img src="{{ player.profile_image.url }}"
+               class="w-full h-full object-cover object-top"
+               alt="{{ player.name }}">
+        {% else %}
+          <!-- Fallback: giant initial + subtle jersey number watermark -->
+          <div class="relative flex flex-col items-center justify-center w-full h-full select-none"
+               style="background:linear-gradient(145deg,var(--role-a),var(--role-b));">
+            <!-- Faint number watermark -->
+            {% if player.jersey_number %}
+            <div class="absolute inset-0 flex items-center justify-center select-none pointer-events-none"
+                 style="font-family:Poppins;font-size:8rem;font-weight:900;color:rgba(0,0,0,0.15);line-height:1;">
+              {{ player.jersey_number }}
+            </div>
+            {% endif %}
+            <!-- Big initial -->
+            <span style="font-family:Poppins;font-weight:900;font-size:5.5rem;color:rgba(255,255,255,0.92);line-height:1;position:relative;z-index:1;">
+              {{ player.name|first|upper }}
+            </span>
+            <span style="font-family:Inter;font-size:11px;font-weight:600;letter-spacing:0.15em;
+                         color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:8px;position:relative;z-index:1;">
+              {{ player.get_role_display }}
+            </span>
+          </div>
+        {% endif %}
+      </div>
+      <!-- Jersey badge -->
+      {% if player.jersey_number %}
+      <div class="jersey-badge">#{{ player.jersey_number }}</div>
+      {% endif %}
+    </div>
+
+    <!-- ── PLAYER INFO ── -->
+    <div class="flex-1 pb-2 text-center sm:text-left">
+
+      <!-- Badges row -->
+      <div class="flex flex-wrap items-center gap-2 justify-center sm:justify-start mb-4">
+        <span class="role-pill">{{ player.get_role_display }}</span>
+        <span class="info-pill">
+          <span class="w-1.5 h-1.5 rounded-full" style="background:{% if player.team == 'Thunder XI' %}#00e676{% else %}#00bcd4{% endif %};"></span>
+          {{ player.team }}
+        </span>
+        <span class="info-pill">{{ player.playing_style }}</span>
+        <span class="info-pill">🎯 {{ player.best_hitting_zone }}</span>
+      </div>
+
+      <!-- Name -->
+      <h1 style="font-family:Poppins;font-weight:900;font-size:clamp(2.2rem,5vw,3.6rem);
+                 line-height:1.05;letter-spacing:-0.02em;color:#fff;margin-bottom:12px;">
+        {{ player.name }}
+      </h1>
+
+      <!-- Bio -->
+      {% if player.bio %}
+      <p style="font-family:Inter;font-size:0.95rem;color:#8899aa;line-height:1.75;
+                max-width:560px;margin-bottom:20px;">
+        {{ player.bio }}
+      </p>
+      {% endif %}
+
+      <!-- Quick stats strip -->
+      <div class="flex flex-wrap gap-3 justify-center sm:justify-start">
+        {% if player.matches_played %}
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.09);
+                    border-radius:12px;padding:10px 18px;text-align:center;">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.25rem;color:#fff;">{{ player.matches_played }}</div>
+          <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.12em;
+                      color:#8899aa;text-transform:uppercase;margin-top:2px;">Matches</div>
+        </div>
+        {% endif %}
+        {% if player.total_runs %}
+        <div style="background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);
+                    border-radius:12px;padding:10px 18px;text-align:center;">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.25rem;color:#60a5fa;">{{ player.total_runs }}</div>
+          <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.12em;
+                      color:#8899aa;text-transform:uppercase;margin-top:2px;">Runs</div>
+        </div>
+        {% endif %}
+        {% if player.total_wickets %}
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);
+                    border-radius:12px;padding:10px 18px;text-align:center;">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.25rem;color:#f87171;">{{ player.total_wickets }}</div>
+          <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.12em;
+                      color:#8899aa;text-transform:uppercase;margin-top:2px;">Wickets</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── PRICE ── -->
+    <div class="text-center flex-shrink-0 pb-2">
+      <div class="price-glow" style="font-family:Poppins;font-weight:900;font-size:3.5rem;line-height:1;">
+        {{ player.price }}
+      </div>
+      <div style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:0.18em;
+                  color:#8899aa;text-transform:uppercase;margin-top:4px;">Credits</div>
+      {% if active_tournament and active_tournament.is_open %}
+      <a href="/tournament/{{ active_tournament.id }}/create-team/"
+         style="display:inline-flex;align-items:center;gap:6px;margin-top:16px;
+                background:linear-gradient(135deg,var(--role-a),var(--role-b));
+                color:#fff;font-family:Poppins;font-weight:700;font-size:12px;
+                padding:10px 20px;border-radius:12px;text-decoration:none;
+                box-shadow:0 6px 24px var(--role-glow);
+                transition:transform 0.2s ease,box-shadow 0.2s ease;"
+         onmouseover="this.style.transform='scale(1.04)'"
+         onmouseout="this.style.transform='scale(1)'">
+        <i data-lucide="plus" class="w-4 h-4"></i> Pick Player
+      </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Bottom gradient fade -->
+  <div class="absolute bottom-0 left-0 right-0 h-24 pointer-events-none"
+       style="background:linear-gradient(to bottom, transparent, #060d1a);"></div>
+</div>
+
+<!-- ════════════════════════════════════════ -->
+<!--  CONTENT BELOW HERO                     -->
+<!-- ════════════════════════════════════════ -->
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
+
+  <!-- ── RATING RINGS ── -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+
+    <!-- Batting ring -->
+    <div class="section-card p-7 flex flex-col items-center">
+      <div class="relative mb-4" style="width:130px;height:130px;">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2.2"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#bat-grad)" stroke-width="2.2"
+                  stroke-dasharray="{{ player.batting_rating|floatformat:0 }}0 100"
+                  stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="bat-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#3b82f6"/>
+              <stop offset="100%" stop-color="#60a5fa"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span style="font-family:Poppins;font-weight:900;font-size:1.9rem;color:#3b82f6;line-height:1;">{{ player.batting_rating|floatformat:1 }}</span>
+          <span style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:2px;">/ 10</span>
+        </div>
+      </div>
+      <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Batting</div>
+      <div style="font-family:Inter;font-size:11px;color:#8899aa;margin-top:4px;">
+        {% if player.batting_rating >= 8.5 %}Elite{% elif player.batting_rating >= 7 %}Advanced{% elif player.batting_rating >= 5 %}Intermediate{% else %}Developing{% endif %}
+      </div>
+      <!-- Sub bar -->
+      <div class="w-full mt-4">
+        <div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);overflow:hidden;">
+          <div style="height:3px;border-radius:2px;background:linear-gradient(90deg,#3b82f6,#60a5fa);width:{{ player.batting_rating|floatformat:0 }}0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bowling ring -->
+    <div class="section-card p-7 flex flex-col items-center">
+      <div class="relative mb-4" style="width:130px;height:130px;">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2.2"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#bowl-grad)" stroke-width="2.2"
+                  stroke-dasharray="{{ player.bowling_rating|floatformat:0 }}0 100"
+                  stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="bowl-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#ef4444"/>
+              <stop offset="100%" stop-color="#f87171"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span style="font-family:Poppins;font-weight:900;font-size:1.9rem;color:#ef4444;line-height:1;">{{ player.bowling_rating|floatformat:1 }}</span>
+          <span style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:2px;">/ 10</span>
+        </div>
+      </div>
+      <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Bowling</div>
+      <div style="font-family:Inter;font-size:11px;color:#8899aa;margin-top:4px;">
+        {% if player.bowling_rating >= 8.5 %}Elite{% elif player.bowling_rating >= 7 %}Advanced{% elif player.bowling_rating >= 5 %}Intermediate{% else %}Developing{% endif %}
+      </div>
+      <div class="w-full mt-4">
+        <div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);overflow:hidden;">
+          <div style="height:3px;border-radius:2px;background:linear-gradient(90deg,#ef4444,#f87171);width:{{ player.bowling_rating|floatformat:0 }}0%;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fielding ring -->
+    <div class="section-card p-7 flex flex-col items-center">
+      <div class="relative mb-4" style="width:130px;height:130px;">
+        <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="2.2"/>
+          <circle cx="18" cy="18" r="15.9" fill="none" stroke="url(#field-grad)" stroke-width="2.2"
+                  stroke-dasharray="{{ player.fielding_rating|floatformat:0 }}0 100"
+                  stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="field-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#a855f7"/>
+              <stop offset="100%" stop-color="#c084fc"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center">
+          <span style="font-family:Poppins;font-weight:900;font-size:1.9rem;color:#a855f7;line-height:1;">{{ player.fielding_rating|floatformat:1 }}</span>
+          <span style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:2px;">/ 10</span>
+        </div>
+      </div>
+      <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Fielding</div>
+      <div style="font-family:Inter;font-size:11px;color:#8899aa;margin-top:4px;">
+        {% if player.fielding_rating >= 8.5 %}Elite{% elif player.fielding_rating >= 7 %}Advanced{% elif player.fielding_rating >= 5 %}Intermediate{% else %}Developing{% endif %}
+      </div>
+      <div class="w-full mt-4">
+        <div style="height:3px;border-radius:2px;background:rgba(255,255,255,0.06);overflow:hidden;">
+          <div style="height:3px;border-radius:2px;background:linear-gradient(90deg,#a855f7,#c084fc);width:{{ player.fielding_rating|floatformat:0 }}0%;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STATS GRID ── -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+    <!-- Batting -->
+    <div class="section-card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(59,130,246,0.15);
+                    border:1px solid rgba(59,130,246,0.2);display:flex;align-items:center;justify-content:center;font-size:1rem;">🏏</div>
+        <div>
+          <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Batting Stats</div>
+          <div style="font-family:Inter;font-size:11px;color:#8899aa;">Career overview</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#fff;line-height:1;">{{ player.matches_played }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Matches</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#60a5fa;line-height:1;">{{ player.total_runs }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Total Runs</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#60a5fa;line-height:1;">{{ player.average|floatformat:1 }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Average</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#60a5fa;line-height:1;">{{ player.strike_rate|floatformat:0 }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Strike Rate</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bowling & Style -->
+    <div class="section-card p-6">
+      <div class="flex items-center gap-3 mb-5">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(239,68,68,0.12);
+                    border:1px solid rgba(239,68,68,0.2);display:flex;align-items:center;justify-content:center;font-size:1rem;">🎯</div>
+        <div>
+          <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Bowling & Style</div>
+          <div style="font-family:Inter;font-size:11px;color:#8899aa;">Bowling + approach</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#f87171;line-height:1;">{{ player.total_wickets }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Wickets</div>
+        </div>
+        <div class="stat-card">
+          <div style="font-family:Poppins;font-weight:800;font-size:1.5rem;color:#f87171;line-height:1;">{{ player.economy|floatformat:1 }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Economy</div>
+        </div>
+        <div class="stat-card col-span-1">
+          <div style="font-family:Poppins;font-weight:700;font-size:0.95rem;color:#fb923c;line-height:1.2;">{{ player.best_hitting_zone }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Best Zone</div>
+        </div>
+        <div class="stat-card col-span-1">
+          <div style="font-family:Poppins;font-weight:700;font-size:0.95rem;color:#c084fc;line-height:1.2;">{{ player.playing_style }}</div>
+          <div style="font-family:Inter;font-size:10px;font-weight:600;letter-spacing:0.1em;color:#8899aa;text-transform:uppercase;margin-top:4px;">Style</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RECENT PERFORMANCES ── -->
+  {% if performances %}
+  <div class="section-card overflow-hidden">
+    <div class="px-6 py-5 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div style="width:36px;height:36px;border-radius:10px;background:rgba(0,230,118,0.1);
+                    border:1px solid rgba(0,230,118,0.18);display:flex;align-items:center;justify-content:center;font-size:1rem;">📊</div>
+        <div>
+          <div style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;">Recent Performances</div>
+          <div style="font-family:Inter;font-size:11px;color:#8899aa;">Tournament history</div>
+        </div>
+      </div>
+    </div>
+    <div class="grad-divider"></div>
+    <div class="overflow-x-auto">
+      <table class="w-full" style="font-family:Inter;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+            <th class="text-left px-6 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Tournament</th>
+            <th class="text-center px-4 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Runs</th>
+            <th class="text-center px-4 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Balls</th>
+            <th class="text-center px-4 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Wkts</th>
+            <th class="text-center px-4 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Catches</th>
+            <th class="text-center px-6 py-3" style="font-size:10px;font-weight:700;letter-spacing:0.12em;color:#8899aa;text-transform:uppercase;">Pts</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for perf in performances %}
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.04);transition:background 0.15s ease;">
+            <td class="px-6 py-4">
+              <div style="font-weight:600;color:#e2e8f0;">{{ perf.tournament.name|truncatechars:28 }}</div>
+              {% if perf.notes %}
+              <div style="font-size:11px;color:#ffd700;margin-top:2px;">⭐ {{ perf.notes }}</div>
+              {% endif %}
+            </td>
+            <td class="text-center px-4 py-4">
+              <span style="font-family:Poppins;font-weight:700;
+                {% if perf.runs_scored >= 100 %}color:#ffd700;{% elif perf.runs_scored >= 50 %}color:#fb923c;{% else %}color:#fff;{% endif %}">
+                {{ perf.runs_scored }}
+              </span>
+            </td>
+            <td class="text-center px-4 py-4" style="color:#8899aa;">{{ perf.balls_faced }}</td>
+            <td class="text-center px-4 py-4">
+              <span style="font-family:Poppins;font-weight:700;
+                {% if perf.wickets_taken >= 5 %}color:#ffd700;{% elif perf.wickets_taken >= 3 %}color:#f87171;{% else %}color:#fff;{% endif %}">
+                {{ perf.wickets_taken }}
+              </span>
+            </td>
+            <td class="text-center px-4 py-4" style="color:#fff;">{{ perf.catches }}</td>
+            <td class="text-center px-6 py-4">
+              <span style="display:inline-flex;align-items:center;padding:4px 12px;border-radius:8px;font-family:Poppins;font-weight:700;font-size:13px;
+                {% if perf.fantasy_points >= 80 %}background:rgba(0,230,118,0.15);border:1px solid rgba(0,230,118,0.25);color:#00e676;
+                {% elif perf.fantasy_points >= 50 %}background:rgba(251,191,36,0.12);border:1px solid rgba(251,191,36,0.2);color:#fbbf24;
+                {% elif perf.fantasy_points >= 25 %}background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.2);color:#fb923c;
+                {% else %}background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#f87171;{% endif %}">
+                {{ perf.fantasy_points|floatformat:1 }}
+              </span>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Back button -->
+  <div class="pt-2">
+    <a href="/players/"
+       style="display:inline-flex;align-items:center;gap:8px;font-family:Inter;font-size:13px;
+              font-weight:600;color:#8899aa;text-decoration:none;transition:color 0.2s ease;"
+       onmouseover="this.style.color='#00e676'" onmouseout="this.style.color='#8899aa'">
+      <i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Players
+    </a>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard — {{ tournament.name }}{% endblock %}
+{% block content %}
+
+<div class="max-w-5xl mx-auto px-4 py-10">
+  
+  <!-- Header -->
+  <div class="text-center mb-10">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-4 border" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.2);">
+      <span class="text-xs font-bold uppercase tracking-widest" style="color:#ffd700;font-family:Inter;">🏆 Leaderboard</span>
+    </div>
+    <h1 class="text-4xl font-black mb-2" style="font-family:Poppins;">{{ tournament.name }}</h1>
+    <p class="text-gray-400" style="font-family:Inter;">{{ tournament.team_a_name }} vs {{ tournament.team_b_name }}</p>
+  </div>
+  
+  <!-- TOP 3 PODIUM -->
+  {% if top3 %}
+  <div class="flex items-end justify-center gap-4 mb-12">
+    
+    <!-- 2nd Place -->
+    {% if top3|length > 1 %}
+    <div class="text-center flex-1 max-w-[180px]">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-xl font-black text-gray-900 mx-auto mb-2" style="background:linear-gradient(135deg,#c0c0c0,#808080);">
+        {{ top3.1.team_name|first|upper }}
+      </div>
+      <div class="font-bold text-sm text-gray-300 mb-1 truncate" style="font-family:Poppins;" title="{{ top3.1.team_name }}">{{ top3.1.team_name|truncatechars:14 }}</div>
+      <div class="text-xs text-gray-500 mb-2" style="font-family:Inter;">{{ top3.1.user.username }}</div>
+      <div class="text-lg font-black mb-2" style="font-family:Poppins;color:#c0c0c0;">{{ top3.1.total_points|floatformat:1 }}</div>
+      <div class="podium-2 rounded-t-2xl flex items-center justify-center">
+        <span class="text-3xl font-black" style="color:#c0c0c0;font-family:Poppins;">2</span>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- 1st Place -->
+    <div class="text-center flex-1 max-w-[200px]">
+      <div class="text-3xl mb-1">👑</div>
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-gray-900 mx-auto mb-2" style="background:linear-gradient(135deg,#ffd700,#ff8f00);">
+        {{ top3.0.team_name|first|upper }}
+      </div>
+      <div class="font-black text-base mb-1 truncate" style="font-family:Poppins;color:#ffd700;" title="{{ top3.0.team_name }}">{{ top3.0.team_name|truncatechars:16 }}</div>
+      <div class="text-xs text-gray-400 mb-2" style="font-family:Inter;">{{ top3.0.user.username }}</div>
+      <div class="text-2xl font-black mb-2 gradient-text-gold" style="font-family:Poppins;">{{ top3.0.total_points|floatformat:1 }}</div>
+      <div class="podium-1 rounded-t-2xl flex items-center justify-center">
+        <span class="text-4xl font-black" style="color:#ffd700;font-family:Poppins;">1</span>
+      </div>
+    </div>
+    
+    <!-- 3rd Place -->
+    {% if top3|length > 2 %}
+    <div class="text-center flex-1 max-w-[180px]">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black text-gray-900 mx-auto mb-2" style="background:linear-gradient(135deg,#cd7f32,#8b4513);">
+        {{ top3.2.team_name|first|upper }}
+      </div>
+      <div class="font-bold text-sm text-gray-400 mb-1 truncate" style="font-family:Poppins;" title="{{ top3.2.team_name }}">{{ top3.2.team_name|truncatechars:14 }}</div>
+      <div class="text-xs text-gray-500 mb-2" style="font-family:Inter;">{{ top3.2.user.username }}</div>
+      <div class="text-lg font-black mb-2" style="font-family:Poppins;color:#cd7f32;">{{ top3.2.total_points|floatformat:1 }}</div>
+      <div class="podium-3 rounded-t-2xl flex items-center justify-center">
+        <span class="text-2xl font-black" style="color:#cd7f32;font-family:Poppins;">3</span>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+  
+  <!-- Full Rankings Table -->
+  <div class="glass-card-static rounded-2xl overflow-hidden mb-8">
+    <div class="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+      <h2 class="font-bold" style="font-family:Poppins;">Full Rankings</h2>
+      <span class="text-sm text-gray-400" style="font-family:Inter;">{{ teams.count }} teams</span>
+    </div>
+    
+    {% if teams %}
+    <div class="overflow-x-auto">
+      <table class="w-full" style="font-family:Inter;">
+        <thead>
+          <tr class="border-b border-white/5 text-xs uppercase tracking-wider text-gray-500">
+            <th class="text-center px-4 py-3 font-medium">Rank</th>
+            <th class="text-left px-4 py-3 font-medium">Team</th>
+            <th class="text-left px-4 py-3 font-medium hidden sm:table-cell">Owner</th>
+            <th class="text-center px-4 py-3 font-medium">Points</th>
+            <th class="text-center px-4 py-3 font-medium hidden md:table-cell">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for team in teams %}
+          <tr class="border-b border-white/5 hover:bg-white/2 transition-colors
+            {% if user_team and team.id == user_team.id %}{% endif %}"
+            style="{% if user_team and team.id == user_team.id %}background:rgba(0,230,118,0.05);{% endif %}">
+            
+            <td class="text-center px-4 py-4">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-black mx-auto"
+                   style="{% if forloop.counter == 1 %}background:rgba(255,215,0,0.2);color:#ffd700{% elif forloop.counter == 2 %}background:rgba(192,192,192,0.15);color:#c0c0c0{% elif forloop.counter == 3 %}background:rgba(205,127,50,0.15);color:#cd7f32{% else %}background:rgba(255,255,255,0.05);color:#8899aa{% endif %}">
+                {{ forloop.counter }}
+              </div>
+            </td>
+            
+            <td class="px-4 py-4">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-black flex-shrink-0"
+                     style="background:linear-gradient(135deg,#00e676,#00bcd4);">
+                  {{ team.team_name|first|upper }}
+                </div>
+                <div>
+                  <div class="font-semibold text-sm" style="font-family:Poppins;">
+                    {{ team.team_name }}
+                    {% if user_team and team.id == user_team.id %}
+                    <span class="ml-2 text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,230,118,0.15);color:#00e676;">You</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </td>
+            
+            <td class="px-4 py-4 hidden sm:table-cell">
+              <span class="text-sm text-gray-400">{{ team.user.username }}</span>
+            </td>
+            
+            <td class="px-4 py-4 text-center">
+              <span class="text-lg font-black {% if forloop.counter == 1 %}gradient-text-gold{% else %}gradient-text{% endif %}" style="font-family:Poppins;">
+                {{ team.total_points|floatformat:1 }}
+              </span>
+            </td>
+            
+            <td class="px-4 py-4 text-center hidden md:table-cell">
+              {% if user.is_authenticated and team.user == user %}
+              <a href="/tournament/{{ tournament.id }}/my-team/" class="btn-secondary text-xs py-1.5 px-3">View →</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-16">
+      <i data-lucide="trophy" class="w-16 h-16 mx-auto mb-4 text-gray-700"></i>
+      <p class="text-gray-500" style="font-family:Inter;">No teams yet. Be the first!</p>
+      <a href="/tournament/{{ tournament.id }}/create-team/" class="btn-primary mt-4 inline-flex">Create Team</a>
+    </div>
+    {% endif %}
+  </div>
+  
+  <!-- Tournament Summary (if completed) -->
+  {% if tournament.is_completed %}
+  <div class="glass-card-static rounded-2xl p-6 mb-6">
+    <h2 class="text-lg font-bold mb-4" style="font-family:Poppins;">🏆 Tournament Summary</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {% if top_scorer %}
+      <div class="bg-white/3 rounded-xl p-4">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" style="font-family:Inter;">Top Scorer</div>
+        <div class="font-bold" style="font-family:Poppins;">{{ top_scorer.player.name }}</div>
+        <div class="text-2xl font-black text-yellow-400" style="font-family:Poppins;">{{ top_scorer.runs_scored }} runs</div>
+      </div>
+      {% endif %}
+      {% if top_bowler %}
+      <div class="bg-white/3 rounded-xl p-4">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" style="font-family:Inter;">Top Bowler</div>
+        <div class="font-bold" style="font-family:Poppins;">{{ top_bowler.player.name }}</div>
+        <div class="text-2xl font-black text-red-400" style="font-family:Poppins;">{{ top_bowler.wickets_taken }} wkts</div>
+      </div>
+      {% endif %}
+      {% if top3 %}
+      <div class="bg-white/3 rounded-xl p-4">
+        <div class="text-xs text-gray-500 uppercase tracking-wider mb-2" style="font-family:Inter;">Winner</div>
+        <div class="font-bold" style="font-family:Poppins;">{{ top3.0.team_name }}</div>
+        <div class="text-2xl font-black gradient-text-gold" style="font-family:Poppins;">{{ top3.0.total_points|floatformat:1 }} pts</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <!-- Back to tournament -->
+  {% if not user_team and tournament.is_open %}
+  <div class="text-center">
+    <a href="/tournament/{{ tournament.id }}/create-team/" class="btn-primary">
+      <i data-lucide="plus-circle" class="w-5 h-5"></i> Create Your Team
+    </a>
+  </div>
+  {% endif %}
+  
+</div>
+{% endblock %}
