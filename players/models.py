@@ -1,4 +1,10 @@
 from django.db import models
+import os
+
+def player_image_path(instance, filename):
+    ext = filename.split('.')[-1]
+    clean_name = instance.name.lower().replace(" ", "_")
+    return f'players/{clean_name}.{ext}'
 
 class Player(models.Model):
     ROLE_CHOICES = [('BAT','Batsman'),('BOWL','Bowler'),('AR','All-Rounder'),('WK','Wicket-Keeper')]
@@ -15,7 +21,7 @@ class Player(models.Model):
     bowling_rating = models.FloatField(default=5.0)
     fielding_rating = models.FloatField(default=5.0)
     best_hitting_zone = models.CharField(max_length=20, choices=ZONE_CHOICES, default='All Around')
-    profile_image = models.ImageField(upload_to='players/', blank=True, null=True)
+    profile_image = models.ImageField(upload_to=player_image_path, blank=True, null=True)
     matches_played = models.IntegerField(default=0)
     total_runs = models.IntegerField(default=0)
     total_wickets = models.IntegerField(default=0)

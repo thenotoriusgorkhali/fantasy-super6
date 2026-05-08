@@ -5,7 +5,7 @@ __pycache__/
 *.pyc
 *.pyo
 db.sqlite3
-media/
+
 .env
 staticfiles/
 *.log
