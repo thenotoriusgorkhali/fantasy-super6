@@ -10,7 +10,7 @@ class Player(models.Model):
     ROLE_CHOICES = [('BAT','Batsman'),('BOWL','Bowler'),('AR','All-Rounder'),('WK','Wicket-Keeper')]
     STYLE_CHOICES = [('Attacking','Attacking'),('Defensive','Defensive'),('Balanced','Balanced')]
     ZONE_CHOICES = [('Off Side','Off Side'),('Leg Side','Leg Side'),('Straight','Straight'),('All Around','All Around')]
-    TEAM_CHOICES = [('Team A','Team A'),('Team B','Team B')]
+    TEAM_CHOICES = [('Gaule Gugglers', 'Gaule Gugglers'), ('Boundary Boys', 'Boundary Boys')]
 
     name = models.CharField(max_length=100)
     team = models.CharField(max_length=50, choices=TEAM_CHOICES)
