@@ -21,4 +21,5 @@ urlpatterns = [
     path('tournament/<int:tournament_id>/create-team/', team_views.create_team, name='create_team'),
     path('tournament/<int:tournament_id>/my-team/', team_views.my_team, name='my_team'),
     path('tournament/<int:tournament_id>/leaderboard/', score_views.leaderboard, name='leaderboard'),
+    path('tournament/<int:tournament_id>/team/<int:team_id>/', score_views.view_team, name='view_team'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

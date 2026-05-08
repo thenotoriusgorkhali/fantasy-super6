@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+{% block title %}{{ team.team_name }} — {{ team.user.username }}'s Team{% endblock %}
+
+{% block extra_head %}
+<style>
+.team-page{background:#060d1a;min-height:100vh;}
+.field-bg{position:absolute;inset:0;background:radial-gradient(ellipse 100% 100% at 50% 50%,#2d7a2d 0%,#256325 30%,#1a4f1a 60%,#0f3a0f 85%,#0a280a 100%);border-radius:50%;overflow:hidden;box-shadow:0 0 0 3px rgba(0,230,118,0.25),0 0 60px rgba(0,230,118,0.12),0 20px 80px rgba(0,0,0,0.6);}
+.field-bg::before{content:'';position:absolute;inset:0;border-radius:50%;background:repeating-linear-gradient(180deg,transparent 0,transparent 22px,rgba(0,0,0,0.07) 22px,rgba(0,0,0,0.07) 44px);}
+.bdr{position:absolute;border-radius:50%;}
+.pitch-rect{position:absolute;left:50%;top:28%;transform:translateX(-50%);width:9%;height:44%;background:linear-gradient(180deg,rgba(194,154,72,0.5),rgba(210,170,80,0.35));border:1px solid rgba(210,170,80,0.5);border-radius:3px;}
+.pitch-rect::before,.pitch-rect::after{content:'';position:absolute;left:0;right:0;height:2px;background:rgba(255,255,255,0.55);}
+.pitch-rect::before{top:12%;}.pitch-rect::after{bottom:12%;}
+.fp{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:20;transition:transform .2s ease;}
+.fp:hover{transform:translate(-50%,-50%) scale(1.1);z-index:30;}
+.fp-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:14px;line-height:1;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.9));}
+.fp-ring{width:52px;height:52px;border-radius:50%;padding:3px;position:relative;flex-shrink:0;}
+.fp-ring-inner{width:100%;height:100%;border-radius:50%;overflow:hidden;border:2px solid rgba(0,0,0,0.35);}
+.fp-ring-inner img{width:100%;height:100%;object-fit:cover;object-position:top;}
+.fp-init{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-weight:900;font-size:1.1rem;color:#fff;}
+.fp-multi{position:absolute;bottom:0;right:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;font-size:7px;font-weight:900;border:2px solid #060d1a;box-shadow:0 2px 6px rgba(0,0,0,0.5);}
+.fp-chip{background:rgba(0,0,0,0.78);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.12);border-radius:20px;padding:3px 9px;text-align:center;min-width:62px;max-width:88px;}
+.fp-chip-name{font-family:'Poppins',sans-serif;font-size:9.5px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;}
+.fp-chip-pts{font-family:'Poppins',sans-serif;font-size:9px;font-weight:800;line-height:1.2;}
+@media(max-width:480px){.fp-ring{width:40px;height:40px;padding:2px;}.fp-init{font-size:.85rem;}.fp-chip-name{font-size:8px;max-width:58px;}}
+.scard{background:linear-gradient(145deg,rgba(13,31,53,0.97),rgba(6,13,26,0.99));border-radius:18px;overflow:hidden;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease;}
+.scard:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,0,0,0.4);}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="team-page">
+
+  <!-- HEADER -->
+  <div style="background:linear-gradient(180deg,rgba(0,230,118,0.08) 0%,transparent 100%);border-bottom:1px solid rgba(0,230,118,0.12);padding:28px 20px 24px;text-align:center;">
+    <div style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:.15em;color:#8899aa;text-transform:uppercase;margin-bottom:6px;">{{ team.user.username }}'s Team</div>
+    <h1 style="font-family:Poppins;font-weight:900;font-size:clamp(1.5rem,4vw,2.2rem);background:linear-gradient(135deg,#00e676,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;">{{ team.team_name }}</h1>
+    <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;">
+      <div style="text-align:center;">
+        <div style="font-family:Poppins;font-weight:900;font-size:2.4rem;line-height:1;background:linear-gradient(135deg,#00e676,#00bcd4);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">{{ team.total_points|floatformat:1 }}</div>
+        <div style="font-family:Inter;font-size:9px;font-weight:700;letter-spacing:.12em;color:#8899aa;text-transform:uppercase;margin-top:3px;">Total Points</div>
+      </div>
+      {% if team.rank %}
+      <div style="padding:8px 20px;border-radius:12px;{% if team.rank == 1 %}background:rgba(255,215,0,0.12);color:#ffd700;border:1px solid rgba(255,215,0,0.3);{% elif team.rank == 2 %}background:rgba(192,192,192,0.1);color:#c0c0c0;border:1px solid rgba(192,192,192,0.25);{% else %}background:rgba(255,255,255,0.05);color:#8899aa;border:1px solid rgba(255,255,255,0.1);{% endif %}">
+        <div style="font-family:Poppins;font-weight:900;font-size:1.4rem;line-height:1;">#{{ team.rank }}</div>
+        <div style="font-family:Inter;font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin-top:2px;opacity:.7;">Rank</div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- CRICKET FIELD -->
+  <div style="padding:24px 16px 8px;">
+    <div style="position:relative;width:100%;max-width:500px;margin:0 auto;">
+      <div style="position:relative;width:100%;padding-bottom:125%;">
+        <div class="field-bg">
+          <div class="bdr" style="inset:4%;border:1.5px solid rgba(255,255,255,0.18);"></div>
+          <div class="bdr" style="inset:18%;border:1px solid rgba(255,255,255,0.09);"></div>
+          <div class="pitch-rect"></div>
+          <div style="position:absolute;top:3.5%;left:50%;transform:translateX(-50%);font-family:Inter;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);border-radius:20px;padding:2px 10px;white-space:nowrap;">{{ tournament.team_a_name }}</div>
+          <div style="position:absolute;bottom:3.5%;left:50%;transform:translateX(-50%);font-family:Inter;font-size:8.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,0.4);background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);border-radius:20px;padding:2px 10px;white-space:nowrap;">{{ tournament.team_b_name }}</div>
+          {% for item in player_data %}{% with tp=item.tp %}
+          <div class="fp" style="top:{{ item.field_top }};left:{{ item.field_left }};">
+            {% if tp.role_in_team == 'Captain' %}<div class="fp-badge">👑</div>
+            {% elif tp.role_in_team == 'Vice Captain' %}<div class="fp-badge" style="font-size:12px;top:-9px;">🥈</div>{% endif %}
+            <div class="fp-ring" style="background:{{ item.role_color }};">
+              <div class="fp-ring-inner">
+                {% if tp.player.profile_image %}<img src="{{ tp.player.profile_image.url }}" alt="{{ tp.player.name }}">
+                {% else %}<div class="fp-init" style="background:{{ item.role_grad }};">{{ tp.player.name|first|upper }}</div>{% endif %}
+              </div>
+              {% if tp.role_in_team == 'Captain' %}<div class="fp-multi" style="background:linear-gradient(135deg,#ffd700,#ff8f00);color:#000;">2×</div>
+              {% elif tp.role_in_team == 'Vice Captain' %}<div class="fp-multi" style="background:linear-gradient(135deg,#d0d0d0,#909090);color:#000;">1.5×</div>{% endif %}
+            </div>
+            <div class="fp-chip" style="{% if tp.role_in_team == 'Captain' %}border-color:rgba(255,215,0,0.45);{% elif tp.role_in_team == 'Vice Captain' %}border-color:rgba(192,192,192,0.35);{% endif %}">
+              <div class="fp-chip-name">{{ tp.player.name|truncatechars:11 }}</div>
+              <div class="fp-chip-pts" style="color:{{ item.pts_color }};">{% if tp.points_earned > 0 %}{{ tp.points_earned|floatformat:0 }}pts{% else %}—{% endif %}</div>
+            </div>
+          </div>
+          {% endwith %}{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:7px;padding:10px 16px 4px;">
+    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);font-family:Inter;font-size:10px;font-weight:600;color:#93c5fd;"><div style="width:7px;height:7px;border-radius:50%;background:#3b82f6;"></div>Batsman</div>
+    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);font-family:Inter;font-size:10px;font-weight:600;color:#fca5a5;"><div style="width:7px;height:7px;border-radius:50%;background:#ef4444;"></div>Bowler</div>
+    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);font-family:Inter;font-size:10px;font-weight:600;color:#c4b5fd;"><div style="width:7px;height:7px;border-radius:50%;background:#8b5cf6;"></div>All-Rounder</div>
+    <div style="display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:20px;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);font-family:Inter;font-size:10px;font-weight:600;color:#fdba74;"><div style="width:7px;height:7px;border-radius:50%;background:#f97316;"></div>WK</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);font-family:Inter;font-size:10px;font-weight:600;color:#fcd34d;">👑 Captain 2×</div>
+    <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:20px;background:rgba(192,192,192,0.08);border:1px solid rgba(192,192,192,0.18);font-family:Inter;font-size:10px;font-weight:600;color:#d1d5db;">🥈 VC 1.5×</div>
+  </div>
+
+  <!-- PLAYER CARDS with breakdown modal -->
+  <div style="max-width:680px;margin:0 auto;padding:20px 16px 40px;" id="cardsSection">
+    <h2 style="font-family:Poppins;font-weight:700;font-size:1rem;color:#fff;margin-bottom:6px;text-align:center;">Player Breakdown</h2>
+    <p style="font-family:Inter;font-size:11px;color:#8899aa;text-align:center;margin-bottom:14px;">Tap any card to see full points calculation</p>
+
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
+      {% for item in player_data %}{% with tp=item.tp perf=item.perf %}
+      <div class="scard"
+           style="border:1px solid {% if tp.role_in_team == 'Captain' %}rgba(255,215,0,0.35){% elif tp.role_in_team == 'Vice Captain' %}rgba(192,192,192,0.28){% else %}rgba(255,255,255,0.07){% endif %};"
+           onclick="openModal(this)"
+           data-name="{{ tp.player.name }}"
+           data-role="{{ tp.role_in_team }}"
+           data-pts="{{ tp.points_earned }}"
+           data-color="{{ item.pts_color }}"
+           data-multi="{{ item.multiplier }}"
+           data-base="{% if item.bd %}{{ item.bd.base_points }}{% else %}0{% endif %}"
+           data-hasperf="{% if perf %}1{% else %}0{% endif %}"
+           data-runs="{% if perf %}{{ perf.runs_scored }}{% else %}0{% endif %}"
+           data-balls="{% if perf %}{{ perf.balls_faced }}{% else %}0{% endif %}"
+           data-fours="{% if perf %}{{ perf.fours }}{% else %}0{% endif %}"
+           data-sixes="{% if perf %}{{ perf.sixes }}{% else %}0{% endif %}"
+           data-wkts="{% if perf %}{{ perf.wickets_taken }}{% else %}0{% endif %}"
+           data-overs="{% if perf %}{{ perf.overs_bowled }}{% else %}0{% endif %}"
+           data-rc="{% if perf %}{{ perf.runs_conceded }}{% else %}0{% endif %}"
+           data-maidens="{% if perf %}{{ perf.maidens }}{% else %}0{% endif %}"
+           data-catches="{% if perf %}{{ perf.catches }}{% else %}0{% endif %}"
+           data-stumpings="{% if perf %}{{ perf.stumpings }}{% else %}0{% endif %}"
+           data-runouts="{% if perf %}{{ perf.run_outs }}{% else %}0{% endif %}"
+           data-runpts="{% if item.bd %}{{ item.bd.batting.runs_pts }}{% else %}0{% endif %}"
+           data-bndpts="{% if item.bd %}{{ item.bd.batting.boundary_pts }}{% else %}0{% endif %}"
+           data-sixpts="{% if item.bd %}{{ item.bd.batting.six_pts }}{% else %}0{% endif %}"
+           data-mil="{% if item.bd %}{{ item.bd.batting.milestone_bonus }}{% else %}0{% endif %}"
+           data-duck="{% if item.bd %}{{ item.bd.batting.duck_penalty }}{% else %}0{% endif %}"
+           data-sr="{% if item.bd %}{{ item.bd.batting.sr_bonus }}{% else %}0{% endif %}"
+           data-wkpts="{% if item.bd %}{{ item.bd.bowling.wicket_pts }}{% else %}0{% endif %}"
+           data-mdpts="{% if item.bd %}{{ item.bd.bowling.maiden_pts }}{% else %}0{% endif %}"
+           data-wkbon="{% if item.bd %}{{ item.bd.bowling.wicket_bonus }}{% else %}0{% endif %}"
+           data-ecbon="{% if item.bd %}{{ item.bd.bowling.economy_bonus }}{% else %}0{% endif %}"
+           data-cpts="{% if item.bd %}{{ item.bd.fielding.catch_pts }}{% else %}0{% endif %}"
+           data-stpts="{% if item.bd %}{{ item.bd.fielding.stumping_pts }}{% else %}0{% endif %}"
+           data-ropts="{% if item.bd %}{{ item.bd.fielding.runout_pts }}{% else %}0{% endif %}">
+
+        <div style="height:3px;background:{% if tp.role_in_team == 'Captain' %}linear-gradient(90deg,#ffd700,#ff8f00){% elif tp.role_in_team == 'Vice Captain' %}linear-gradient(90deg,#d0d0d0,#808080){% else %}{{ item.role_grad }}{% endif %};"></div>
+        <div style="padding:12px 12px 10px;">
+          <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px;">
+            <div style="width:40px;height:40px;border-radius:50%;padding:2px;background:{{ item.role_color }};flex-shrink:0;">
+              <div style="width:100%;height:100%;border-radius:50%;overflow:hidden;">
+                {% if tp.player.profile_image %}<img src="{{ tp.player.profile_image.url }}" style="width:100%;height:100%;object-fit:cover;object-position:top;" alt="{{ tp.player.name }}">
+                {% else %}<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-family:Poppins;font-weight:800;font-size:13px;color:#fff;background:{{ item.role_grad }};">{{ tp.player.name|first|upper }}</div>{% endif %}
+              </div>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-family:Poppins;font-weight:700;font-size:12px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ tp.player.name }}</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <span style="font-family:Inter;font-size:8.5px;font-weight:700;color:#fff;background:{{ item.role_color }};padding:1px 6px;border-radius:4px;text-transform:uppercase;">{{ tp.player.role }}</span>
+                {% if tp.role_in_team == 'Captain' %}<span style="font-family:Poppins;font-size:9px;font-weight:800;color:#ffd700;">👑 C</span>
+                {% elif tp.role_in_team == 'Vice Captain' %}<span style="font-family:Poppins;font-size:9px;font-weight:700;color:#c0c0c0;">🥈 VC</span>{% endif %}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-family:Poppins;font-weight:900;font-size:1.25rem;line-height:1;color:{{ item.pts_color }};">{% if tp.points_earned > 0 %}{{ tp.points_earned|floatformat:1 }}{% else %}—{% endif %}</div>
+              <div style="font-family:Inter;font-size:8px;color:#8899aa;text-transform:uppercase;">pts</div>
+            </div>
+          </div>
+          {% if perf %}
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;">
+            <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:5px 4px;text-align:center;"><div style="font-family:Poppins;font-weight:700;font-size:13px;color:{% if perf.runs_scored >= 50 %}#fcd34d{% elif perf.runs_scored >= 25 %}#86efac{% else %}#fff{% endif %};">{{ perf.runs_scored }}</div><div style="font-family:Inter;font-size:8px;color:#8899aa;text-transform:uppercase;">Runs</div></div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:5px 4px;text-align:center;"><div style="font-family:Poppins;font-weight:700;font-size:13px;color:{% if perf.wickets_taken >= 3 %}#f87171{% elif perf.wickets_taken > 0 %}#fb923c{% else %}#fff{% endif %};">{{ perf.wickets_taken }}</div><div style="font-family:Inter;font-size:8px;color:#8899aa;text-transform:uppercase;">Wkts</div></div>
+            <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:5px 4px;text-align:center;"><div style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;">{{ perf.catches }}</div><div style="font-family:Inter;font-size:8px;color:#8899aa;text-transform:uppercase;">Catch</div></div>
+          </div>
+          {% if tp.role_in_team != 'Player' and item.bd %}
+          <div style="margin-top:5px;font-family:Inter;font-size:9px;color:#8899aa;text-align:center;">{{ item.bd.base_points|floatformat:0 }} × {% if tp.role_in_team == 'Captain' %}2×{% else %}1.5×{% endif %} = <span style="color:{{ item.pts_color }};font-weight:700;">{{ tp.points_earned|floatformat:1 }}</span></div>
+          {% endif %}
+          {% else %}
+          <div style="text-align:center;padding:8px 0;font-family:Inter;font-size:11px;color:#8899aa;">⏳ Awaiting results</div>
+          {% endif %}
+          <div style="text-align:center;margin-top:8px;font-family:Inter;font-size:10px;color:rgba(0,230,118,0.6);">Tap for full breakdown ↓</div>
+        </div>
+      </div>
+      {% endwith %}{% endfor %}
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:24px;">
+      <a href="/tournament/{{ tournament.id }}/leaderboard/" style="display:inline-flex;align-items:center;gap:8px;padding:13px 28px;border-radius:14px;background:linear-gradient(135deg,#00e676,#00bcd4);color:#000;font-family:Poppins;font-weight:700;font-size:13px;text-decoration:none;box-shadow:0 4px 20px rgba(0,230,118,0.3);"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back to Leaderboard</a>
+      
+    </div>
+  </div>
+</div>
+
+<!-- BREAKDOWN MODAL (pure JS, no Alpine conflict) -->
+<div id="bdModal" onclick="if(event.target===this)closeModal()" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);align-items:flex-end;justify-content:center;padding:16px;">
+  <div id="bdSheet" style="background:#0d1f35;border:1px solid rgba(255,255,255,0.1);border-radius:24px 24px 20px 20px;width:100%;max-width:480px;max-height:82vh;overflow-y:auto;box-shadow:0 -20px 60px rgba(0,0,0,0.5);transform:translateY(100%);transition:transform .3s ease;">
+
+    <!-- Header -->
+    <div style="padding:20px 20px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#0d1f35;border-bottom:1px solid rgba(255,255,255,0.07);z-index:1;">
+      <div>
+        <div id="bd-name" style="font-family:Poppins;font-weight:800;font-size:1.1rem;color:#fff;"></div>
+        <div id="bd-role" style="font-family:Inter;font-size:11px;color:#8899aa;margin-top:2px;"></div>
+      </div>
+      <button onclick="closeModal()" style="background:rgba(255,255,255,0.08);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:20px;line-height:1;">×</button>
+    </div>
+
+    <div style="padding:16px 20px 24px;">
+
+      <!-- BATTING -->
+      <div style="margin-bottom:14px;">
+        <div style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#3b82f6;margin-bottom:8px;">🏏 Batting</div>
+        <div id="bd-batting"></div>
+      </div>
+
+      <!-- BOWLING -->
+      <div style="margin-bottom:14px;">
+        <div style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#ef4444;margin-bottom:8px;">🎯 Bowling</div>
+        <div id="bd-bowling"></div>
+      </div>
+
+      <!-- FIELDING -->
+      <div style="margin-bottom:14px;">
+        <div style="font-family:Inter;font-size:10px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#8b5cf6;margin-bottom:8px;">🧤 Fielding</div>
+        <div id="bd-fielding"></div>
+      </div>
+
+      <!-- TOTALS -->
+      <div style="background:rgba(0,0,0,0.3);border-radius:14px;padding:14px 16px;border:1px solid rgba(255,255,255,0.07);" id="bd-totals"></div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function row(label, pts, color) {
+  var c = color || (pts > 0 ? '#00e676' : '#f87171');
+  return '<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);"><span style="font-family:Inter;font-size:13px;color:#ccc;">' + label + '</span><span style="font-family:Poppins;font-weight:700;font-size:13px;color:' + c + ';">' + (pts > 0 ? '+' : '') + pts + '</span></div>';
+}
+function noRow(msg) {
+  return '<div style="font-family:Inter;font-size:12px;color:#8899aa;padding:4px 0;">' + msg + '</div>';
+}
+
+function openModal(el) {
+  var d = el.dataset;
+  var runs = +d.runs, balls = +d.balls, fours = +d.fours, sixes = +d.sixes;
+  var wkts = +d.wkts, overs = +d.overs, rc = +d.rc, maidens = +d.maidens;
+  var catches = +d.catches, stumpings = +d.stumpings, runouts = +d.runouts;
+  var runPts = +d.runpts, bndPts = +d.bndpts, sixPts = +d.sixpts;
+  var mil = +d.mil, duck = +d.duck, sr = +d.sr;
+  var wkPts = +d.wkpts, mdPts = +d.mdpts, wkBon = +d.wkbon, ecBon = +d.ecbon;
+  var cPts = +d.cpts, stPts = +d.stpts, roPts = +d.ropts;
+  var base = +d.base, pts = +d.pts, multi = +d.multi;
+  var hasPf = d.hasperf === '1';
+
+  document.getElementById('bd-name').textContent = d.name;
+  document.getElementById('bd-role').textContent = d.role + ' — Full Points Breakdown';
+
+  // BATTING
+  var bat = '';
+  if (hasPf) {
+    if (runs > 0)    bat += row('Runs (' + runs + ' × 1pt)', runPts);
+    if (fours > 0)   bat += row('Fours (' + fours + ' × 1pt)', bndPts);
+    if (sixes > 0)   bat += row('Sixes (' + sixes + ' × 2pts)', sixPts);
+    if (mil > 0)     bat += row(runs >= 100 ? 'Century Bonus 🎉' : 'Half-century Bonus 🎉', mil, '#fcd34d');
+    if (duck < 0)    bat += row('Duck Penalty 🦆', duck);
+    if (sr !== 0) {
+      var srVal = balls > 0 ? Math.round(runs/balls*100) : 0;
+      bat += row('Strike Rate Bonus (SR: ' + srVal + ')', sr, sr > 0 ? '#00e676' : '#f87171');
+    }
+    if (!bat) bat = noRow('No batting contribution');
+  } else { bat = noRow('No match data yet'); }
+  document.getElementById('bd-batting').innerHTML = bat;
+
+  // BOWLING
+  var bowl = '';
+  if (hasPf) {
+    if (wkts > 0)    bowl += row('Wickets (' + wkts + ' × 25pts)', wkPts);
+    if (maidens > 0) bowl += row('Maidens (' + maidens + ' × 8pts)', mdPts);
+    if (wkBon > 0)   bowl += row(wkts >= 5 ? '5-Wicket Haul! 🎯' : '3-Wicket Bonus 🎯', wkBon, '#fcd34d');
+    if (ecBon !== 0) {
+      var eco = overs > 0 ? (rc/overs).toFixed(1) : '0.0';
+      bowl += row('Economy Rate Bonus (Eco: ' + eco + ')', ecBon, ecBon > 0 ? '#00e676' : '#f87171');
+    }
+    if (!bowl) bowl = noRow('No bowling contribution');
+  } else { bowl = noRow('No match data yet'); }
+  document.getElementById('bd-bowling').innerHTML = bowl;
+
+  // FIELDING
+  var field = '';
+  if (hasPf) {
+    if (catches > 0)   field += row('Catches (' + catches + ' × 8pts)', cPts);
+    if (stumpings > 0) field += row('Stumpings (' + stumpings + ' × 12pts)', stPts);
+    if (runouts > 0)   field += row('Run Outs (' + runouts + ' × 6pts)', roPts);
+    if (!field) field = noRow('No fielding contribution');
+  } else { field = noRow('No match data yet'); }
+  document.getElementById('bd-fielding').innerHTML = field;
+
+  // TOTALS
+  var roleLabel = d.role === 'Captain' ? '× 2.0 (Captain Multiplier)' : d.role === 'Vice Captain' ? '× 1.5 (Vice Captain Multiplier)' : '× 1.0 (No Multiplier)';
+  var multiColor = d.role === 'Captain' ? '#ffd700' : d.role === 'Vice Captain' ? '#c0c0c0' : '#8899aa';
+  var multiDisp = d.role === 'Captain' ? '2×' : d.role === 'Vice Captain' ? '1.5×' : '1×';
+  document.getElementById('bd-totals').innerHTML =
+    '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);"><span style="font-family:Inter;font-size:13px;font-weight:600;color:#fff;">Base Points Total</span><span style="font-family:Poppins;font-weight:800;font-size:14px;color:#fff;">' + base.toFixed(1) + ' pts</span></div>' +
+    '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06);"><span style="font-family:Inter;font-size:13px;color:#ccc;">' + roleLabel + '</span><span style="font-family:Poppins;font-weight:700;font-size:14px;color:' + multiColor + ';">' + multiDisp + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;padding:10px 0 0;"><span style="font-family:Poppins;font-weight:800;font-size:15px;color:#fff;">⭐ Final Points</span><span style="font-family:Poppins;font-weight:900;font-size:1.5rem;color:' + d.color + ';">' + pts.toFixed(1) + '</span></div>';
+
+  // Show modal
+  var modal = document.getElementById('bdModal');
+  var sheet = document.getElementById('bdSheet');
+  modal.style.display = 'flex';
+  setTimeout(function(){ sheet.style.transform = 'translateY(0)'; }, 10);
+}
+
+function closeModal() {
+  var sheet = document.getElementById('bdSheet');
+  sheet.style.transform = 'translateY(100%)';
+  setTimeout(function(){ document.getElementById('bdModal').style.display = 'none'; }, 300);
+}
+
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+</script>
+{% endblock %}
