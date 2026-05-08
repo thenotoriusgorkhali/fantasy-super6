@@ -1,5 +1,22 @@
 {% extends 'base.html' %}
-{% block title %}{{ player.name }} — Fantasy Super 6{% endblock %}
+{% block title %}{{ player.name }} — Fantasy Super 6<script>
+(function() {
+  var C = 213.6;
+  var bat   = {{ player.batting_rating }};
+  var bowl  = {{ player.bowling_rating }};
+  var field = {{ player.fielding_rating }};
+  function setRing(id, val) {
+    var filled = (val / 10) * C;
+    document.getElementById(id).setAttribute('stroke-dasharray', filled + ' ' + (C - filled));
+  }
+  setTimeout(function() {
+    setRing('ring-bat', bat);
+    setRing('ring-bowl', bowl);
+    setRing('ring-field', field);
+  }, 100);
+})();
+</script>
+{% endblock %}
 
 {% block extra_head %}
 <style>
@@ -24,7 +41,7 @@
 
 /* Avatar */
 .pd-avatar {
-  width: 110px; height: 110px;
+  width: 160px; height: 160px;
   border-radius: 50%;
   border: 4px solid {% if player.role == 'BAT' %}#3b82f6{% elif player.role == 'BOWL' %}#ef4444{% elif player.role == 'AR' %}#8b5cf6{% else %}#f97316{% endif %};
   overflow: hidden;
@@ -267,68 +284,57 @@
       <div style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;margin-bottom:16px;">⭐ Skill Ratings</div>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
 
-        <!-- Batting rating -->
-        {% with val=player.batting_rating max=10 color="#3b82f6" %}
-        {% widthratio val 10 214 as ring_fill %}
+        <!-- Rating rings — JS sets correct dasharray (circumference = 213.6) -->
         <div style="text-align:center;">
           <div class="rating-ring" style="margin:0 auto 8px;">
             <svg viewBox="0 0 80 80" width="80" height="80">
               <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
-              <circle cx="40" cy="40" r="34" fill="none" stroke="{{ color }}" stroke-width="7"
-                stroke-dasharray="{{ ring_fill }} 214" stroke-linecap="round"
-                style="filter:drop-shadow(0 0 6px {{ color }});"/>
+              <circle id="ring-bat" cx="40" cy="40" r="34" fill="none" stroke="#3b82f6" stroke-width="7"
+                stroke-dasharray="0 213.6" stroke-linecap="round"
+                style="filter:drop-shadow(0 0 8px #3b82f6);transition:stroke-dasharray 1s ease;"/>
             </svg>
             <div class="rating-ring-val">
-              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ val }}</span>
+              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ player.batting_rating }}</span>
               <span style="font-family:Inter;font-size:8px;color:#8899aa;">/10</span>
             </div>
           </div>
           <div style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;">Batting</div>
-          <div style="font-family:Inter;font-size:10px;color:#93c5fd;">{% if val >= 9 %}Elite{% elif val >= 7 %}Advanced{% elif val >= 5 %}Developing{% else %}Beginner{% endif %}</div>
+          <div style="font-family:Inter;font-size:10px;color:#93c5fd;">{% if player.batting_rating >= 9 %}Elite{% elif player.batting_rating >= 7 %}Advanced{% elif player.batting_rating >= 5 %}Developing{% else %}Beginner{% endif %}</div>
         </div>
-        {% endwith %}
 
-        <!-- Bowling rating -->
-        {% with val=player.bowling_rating color="#ef4444" %}
-        {% widthratio val 10 214 as ring_fill %}
         <div style="text-align:center;">
           <div class="rating-ring" style="margin:0 auto 8px;">
             <svg viewBox="0 0 80 80" width="80" height="80">
               <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
-              <circle cx="40" cy="40" r="34" fill="none" stroke="{{ color }}" stroke-width="7"
-                stroke-dasharray="{{ ring_fill }} 214" stroke-linecap="round"
-                style="filter:drop-shadow(0 0 6px {{ color }});"/>
+              <circle id="ring-bowl" cx="40" cy="40" r="34" fill="none" stroke="#ef4444" stroke-width="7"
+                stroke-dasharray="0 213.6" stroke-linecap="round"
+                style="filter:drop-shadow(0 0 8px #ef4444);transition:stroke-dasharray 1s ease 0.2s;"/>
             </svg>
             <div class="rating-ring-val">
-              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ val }}</span>
+              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ player.bowling_rating }}</span>
               <span style="font-family:Inter;font-size:8px;color:#8899aa;">/10</span>
             </div>
           </div>
           <div style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;">Bowling</div>
-          <div style="font-family:Inter;font-size:10px;color:#fca5a5;">{% if val >= 9 %}Elite{% elif val >= 7 %}Advanced{% elif val >= 5 %}Developing{% else %}Beginner{% endif %}</div>
+          <div style="font-family:Inter;font-size:10px;color:#fca5a5;">{% if player.bowling_rating >= 9 %}Elite{% elif player.bowling_rating >= 7 %}Advanced{% elif player.bowling_rating >= 5 %}Developing{% else %}Beginner{% endif %}</div>
         </div>
-        {% endwith %}
 
-        <!-- Fielding rating -->
-        {% with val=player.fielding_rating color="#8b5cf6" %}
-        {% widthratio val 10 214 as ring_fill %}
         <div style="text-align:center;">
           <div class="rating-ring" style="margin:0 auto 8px;">
             <svg viewBox="0 0 80 80" width="80" height="80">
               <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="7"/>
-              <circle cx="40" cy="40" r="34" fill="none" stroke="{{ color }}" stroke-width="7"
-                stroke-dasharray="{{ ring_fill }} 214" stroke-linecap="round"
-                style="filter:drop-shadow(0 0 6px {{ color }});"/>
+              <circle id="ring-field" cx="40" cy="40" r="34" fill="none" stroke="#8b5cf6" stroke-width="7"
+                stroke-dasharray="0 213.6" stroke-linecap="round"
+                style="filter:drop-shadow(0 0 8px #8b5cf6);transition:stroke-dasharray 1s ease 0.4s;"/>
             </svg>
             <div class="rating-ring-val">
-              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ val }}</span>
+              <span style="font-family:Poppins;font-weight:900;font-size:1.1rem;color:#fff;">{{ player.fielding_rating }}</span>
               <span style="font-family:Inter;font-size:8px;color:#8899aa;">/10</span>
             </div>
           </div>
           <div style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;">Fielding</div>
-          <div style="font-family:Inter;font-size:10px;color:#c4b5fd;">{% if val >= 9 %}Elite{% elif val >= 7 %}Advanced{% elif val >= 5 %}Developing{% else %}Beginner{% endif %}</div>
+          <div style="font-family:Inter;font-size:10px;color:#c4b5fd;">{% if player.fielding_rating >= 9 %}Elite{% elif player.fielding_rating >= 7 %}Advanced{% elif player.fielding_rating >= 5 %}Developing{% else %}Beginner{% endif %}</div>
         </div>
-        {% endwith %}
 
       </div>
     </div>
@@ -360,6 +366,8 @@
     {% if performances %}
     <div class="stat-card" style="margin-bottom:24px;">
       <div style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;margin-bottom:14px;">📊 Match Performances</div>
+
+
 
       {% for p in performances %}
       <div style="display:grid;grid-template-columns:1fr 55px 55px 55px 55px 65px;gap:8px;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);margin-bottom:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
