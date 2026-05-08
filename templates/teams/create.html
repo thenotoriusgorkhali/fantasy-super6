@@ -30,7 +30,7 @@
             <input type="text" placeholder="Search players..." class="input-field pl-10 py-2 text-sm" x-model="search">
           </div>
           <div class="flex gap-2 flex-wrap">
-            <template x-for="t in ['all','Thunder XI','Storm XI']">
+            <template x-for="t in ['all','Gaule Gugglers','Boundary Boys']">
               <button @click="teamF = t" :class="teamF === t ? 'bg-green-500/20 border-green-500/40 text-green-400' : 'border-white/10 text-gray-400'"
                       class="px-3 py-2 rounded-xl border text-xs font-medium transition-all" x-text="t === 'all' ? 'All Teams' : t"></button>
             </template>
