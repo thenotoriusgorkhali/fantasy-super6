@@ -59,72 +59,8 @@ def player_detail(request, pk):
     career_eco = round(total_runs_conceded / total_overs, 1) if total_overs > 0 else 0
     avg_fantasy = round(total_fantasy_pts / matches, 1) if matches > 0 else 0
 
-    best_score_num = best_score  # numeric version for badge logic
     best_bowling_str = f"{best_bowling_wkts}/{best_bowling_runs}" if best_bowling_wkts > 0 else "—"
     best_score_str = f"{best_score}{'*' if not best_score_out else ''}" if best_score > 0 else "—"
-
-    # Generate dynamic badges based on stats
-    badges = []
-
-    # Fantasy performance badges
-    if avg_fantasy >= 150:
-        badges.append({'icon': '👑', 'text': 'Fantasy King', 'color': '#ffd700', 'bg': 'rgba(255,215,0,0.12)', 'border': 'rgba(255,215,0,0.3)'})
-    elif avg_fantasy >= 100:
-        badges.append({'icon': '⭐', 'text': 'Fantasy Elite', 'color': '#00e676', 'bg': 'rgba(0,230,118,0.12)', 'border': 'rgba(0,230,118,0.3)'})
-    elif avg_fantasy >= 60:
-        badges.append({'icon': '🔥', 'text': 'Hot Pick', 'color': '#fb923c', 'bg': 'rgba(249,115,22,0.12)', 'border': 'rgba(249,115,22,0.3)'})
-
-    # Batting badges
-    if best_score_num >= 100:
-        badges.append({'icon': '💯', 'text': 'Century Maker', 'color': '#fcd34d', 'bg': 'rgba(252,211,77,0.12)', 'border': 'rgba(252,211,77,0.3)'})
-    elif best_score_num >= 75:
-        badges.append({'icon': '🏏', 'text': 'Big Hitter', 'color': '#60a5fa', 'bg': 'rgba(96,165,250,0.12)', 'border': 'rgba(96,165,250,0.3)'})
-    elif best_score_num >= 50:
-        badges.append({'icon': '🎯', 'text': 'Consistent Bat', 'color': '#86efac', 'bg': 'rgba(134,239,172,0.12)', 'border': 'rgba(134,239,172,0.3)'})
-
-    # Strike rate badges
-    if career_sr >= 160:
-        badges.append({'icon': '💥', 'text': 'Power Striker', 'color': '#f87171', 'bg': 'rgba(248,113,113,0.12)', 'border': 'rgba(248,113,113,0.3)'})
-    elif career_sr >= 130:
-        badges.append({'icon': '⚡', 'text': 'Explosive Batter', 'color': '#fb923c', 'bg': 'rgba(249,115,22,0.12)', 'border': 'rgba(249,115,22,0.3)'})
-
-    # Bowling badges
-    if total_wkts >= 5:
-        badges.append({'icon': '🎳', 'text': 'Wicket Machine', 'color': '#f87171', 'bg': 'rgba(248,113,113,0.12)', 'border': 'rgba(248,113,113,0.3)'})
-    elif total_wkts >= 3:
-        badges.append({'icon': '🎯', 'text': 'Key Bowler', 'color': '#fb923c', 'bg': 'rgba(249,115,22,0.12)', 'border': 'rgba(249,115,22,0.3)'})
-
-    # Economy badge
-    if career_eco > 0 and career_eco <= 6:
-        badges.append({'icon': '🧊', 'text': 'Economy Master', 'color': '#00bcd4', 'bg': 'rgba(0,188,212,0.12)', 'border': 'rgba(0,188,212,0.3)'})
-
-    # Fielding/catches
-    if total_catches >= 3:
-        badges.append({'icon': '🧤', 'text': 'Safe Hands', 'color': '#c4b5fd', 'bg': 'rgba(196,181,253,0.12)', 'border': 'rgba(196,181,253,0.3)'})
-
-    # Skill rating badges
-    if player.batting_rating >= 9:
-        badges.append({'icon': '🏆', 'text': 'Elite Batsman', 'color': '#3b82f6', 'bg': 'rgba(59,130,246,0.12)', 'border': 'rgba(59,130,246,0.3)'})
-    if player.bowling_rating >= 9:
-        badges.append({'icon': '🔴', 'text': 'Elite Bowler', 'color': '#ef4444', 'bg': 'rgba(239,68,68,0.12)', 'border': 'rgba(239,68,68,0.3)'})
-    if player.fielding_rating >= 9:
-        badges.append({'icon': '💎', 'text': 'Elite Fielder', 'color': '#8b5cf6', 'bg': 'rgba(139,92,246,0.12)', 'border': 'rgba(139,92,246,0.3)'})
-
-    # Role-specific
-    role = player.role
-    if role == 'AR':
-        badges.append({'icon': '⚡', 'text': 'All-Round Threat', 'color': '#a78bfa', 'bg': 'rgba(167,139,250,0.12)', 'border': 'rgba(167,139,250,0.3)'})
-    if role == 'WK':
-        badges.append({'icon': '🧤', 'text': 'Glove Expert', 'color': '#f97316', 'bg': 'rgba(249,115,22,0.12)', 'border': 'rgba(249,115,22,0.3)'})
-
-    # Milestone badges
-    if hundreds >= 1:
-        badges.append({'icon': '💯', 'text': f'{hundreds} Centur{"y" if hundreds==1 else "ies"}', 'color': '#ffd700', 'bg': 'rgba(255,215,0,0.12)', 'border': 'rgba(255,215,0,0.3)'})
-    if fifties >= 3:
-        badges.append({'icon': '🏅', 'text': f'{fifties} Half-Centuries', 'color': '#fcd34d', 'bg': 'rgba(252,211,77,0.12)', 'border': 'rgba(252,211,77,0.3)'})
-
-    # Cap to max 5 most important badges
-    badges = badges[:5]
 
     context = {
         'player': player,
@@ -144,6 +80,5 @@ def player_detail(request, pk):
         'hundreds': hundreds,
         'avg_fantasy': avg_fantasy,
         'total_fantasy_pts': round(total_fantasy_pts, 1),
-        'badges': badges,
     }
     return render(request, 'players/detail.html', context)
