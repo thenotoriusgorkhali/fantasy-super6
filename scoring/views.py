@@ -65,10 +65,10 @@ def view_team(request, tournament_id, team_id):
         player_data.append({'tp': tp, 'perf': perf, 'bd': bd, 'multiplier': multiplier, 'pts_color': pts_color, 'role_color': role_color, 'role_grad': role_grad, 'role_shade': role_shade})
 
     # Assign field positions
-    bat_pos  = [('13%','25%'),('13%','75%'),('22%','50%')]
-    wk_pos   = [('38%','50%')]
-    ar_pos   = [('54%','22%'),('54%','78%'),('63%','50%')]
-    bowl_pos = [('80%','28%'),('80%','72%'),('88%','50%')]
+    bat_pos  = [('12%','25%'),('12%','75%'),('20%','50%'),('20%','15%'),('20%','85%')]
+    wk_pos   = [('36%','50%'),('36%','25%'),('36%','75%')]
+    ar_pos   = [('52%','20%'),('52%','80%'),('60%','50%'),('44%','50%')]
+    bowl_pos = [('74%','28%'),('74%','72%'),('82%','50%'),('68%','50%'),('68%','20%')]
     role_counters = {'BAT':0,'WK':0,'AR':0,'BOWL':0}
     for d in player_data:
         role = d['tp'].player.role

@@ -96,18 +96,64 @@ def my_team(request, tournament_id):
         
         # Performance rating colour
         pts = tp.points_earned
-        if pts >= 150:   pts_color = '#ffd700'
-        elif pts >= 80:  pts_color = '#00e676'
+        if pts >= 200:   pts_color = '#ffd700'
+        elif pts >= 100: pts_color = '#00e676'
         elif pts >= 40:  pts_color = '#00bcd4'
         else:            pts_color = '#8899aa'
 
+        role = tp.player.role
+        if role == 'BAT':
+            role_color = '#3b82f6'
+            role_grad  = 'linear-gradient(135deg,#3b82f6,#1d4ed8)'
+            role_shade = 'rgba(59,130,246,0.12)'
+        elif role == 'BOWL':
+            role_color = '#ef4444'
+            role_grad  = 'linear-gradient(135deg,#ef4444,#991b1b)'
+            role_shade = 'rgba(239,68,68,0.12)'
+        elif role == 'AR':
+            role_color = '#8b5cf6'
+            role_grad  = 'linear-gradient(135deg,#8b5cf6,#6b21a8)'
+            role_shade = 'rgba(139,92,246,0.12)'
+        else:
+            role_color = '#f97316'
+            role_grad  = 'linear-gradient(135deg,#f97316,#c2410c)'
+            role_shade = 'rgba(249,115,22,0.12)'
+
         player_data.append({
-            'tp':        tp,
-            'perf':      perf,
-            'bd':        bd,
+            'tp':         tp,
+            'perf':       perf,
+            'bd':         bd,
             'multiplier': multiplier,
-            'pts_color': pts_color,
+            'pts_color':  pts_color,
+            'role_color': role_color,
+            'role_grad':  role_grad,
+            'role_shade': role_shade,
         })
+
+    # Assign cricket field positions based on role
+    # Collect indices by role
+    bat_pos  = [('12%','25%'),('12%','75%'),('20%','50%'),('20%','15%'),('20%','85%')]
+    wk_pos   = [('36%','50%'),('36%','25%'),('36%','75%')]
+    ar_pos   = [('52%','20%'),('52%','80%'),('60%','50%'),('44%','50%')]
+    bowl_pos = [('74%','28%'),('74%','72%'),('82%','50%'),('68%','50%'),('68%','20%')]
+    role_counters = {'BAT':0,'WK':0,'AR':0,'BOWL':0}
+    for d in player_data:
+        role = d['tp'].player.role
+        idx  = role_counters[role]
+        role_counters[role] += 1
+        if role == 'BAT' and idx < len(bat_pos):
+            d['field_top'], d['field_left'] = bat_pos[idx]
+        elif role == 'WK' and idx < len(wk_pos):
+            d['field_top'], d['field_left'] = wk_pos[idx]
+        elif role == 'AR' and idx < len(ar_pos):
+            d['field_top'], d['field_left'] = ar_pos[idx]
+        elif role == 'BOWL' and idx < len(bowl_pos):
+            d['field_top'], d['field_left'] = bowl_pos[idx]
+        else:
+            # overflow fallback — spread remaining
+            fallback = [('30%','15%'),('30%','85%'),('70%','15%'),('70%','85%'),('50%','8%'),('50%','92%')]
+            fi = sum(role_counters.values()) % len(fallback)
+            d['field_top'], d['field_left'] = fallback[fi]
 
     # Aggregate summary bars
     bat_total   = sum((d['bd']['batting']['batting_total']  if d['bd'] else 0) for d in player_data)
