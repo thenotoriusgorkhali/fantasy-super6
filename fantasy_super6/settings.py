@@ -20,8 +20,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'crispy_forms',
     'crispy_tailwind',
-    'cloudinary_storage',  # ADD THIS
-    'cloudinary',          # ADD THIS
+    'cloudinary_storage',
+    'cloudinary',
     'accounts',
     'players',
     'tournaments',
@@ -74,20 +74,19 @@ TIME_ZONE = 'Asia/Kathmandu'
 USE_I18N = True
 USE_TZ = True
 
-# Static files
+# Static files — WhiteNoise
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Cloudinary
+# Cloudinary — media files stored in cloud permanently
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dim22cswv'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY', '327795183216113'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET', ''),
 }
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
