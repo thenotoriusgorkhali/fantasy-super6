@@ -95,25 +95,22 @@
               </div>
             </td>
             
-            <td class="px-4 py-4">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black text-black flex-shrink-0"
+            <td class="px-3 py-4">
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-xl flex items-center justify-center text-sm font-black text-black flex-shrink-0"
                      style="background:linear-gradient(135deg,#00e676,#00bcd4);">
                   {{ team.team_name|first|upper }}
                 </div>
-                <div>
-                  <div class="font-semibold text-sm" style="font-family:Poppins;">
+                <div style="min-width:0;">
+                  <div class="font-semibold text-sm" style="font-family:Poppins;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;">
                     {{ team.team_name }}
                     {% if user_team and team.id == user_team.id %}
-                    <span class="ml-2 text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,230,118,0.15);color:#00e676;">You</span>
+                    <span class="ml-1 text-xs px-2 py-0.5 rounded-full" style="background:rgba(0,230,118,0.15);color:#00e676;">You</span>
                     {% endif %}
                   </div>
+                  <div class="text-xs text-gray-500" style="font-family:Inter;">{{ team.user.username }}</div>
                 </div>
               </div>
-            </td>
-            
-            <td class="px-4 py-4">
-              <span class="text-sm text-gray-400">{{ team.user.username }}</span>
             </td>
             
             <td class="px-4 py-4 text-center">
