@@ -145,3 +145,15 @@ class PlayerPerformance(models.Model):
         if self.overs_bowled > 0:
             return round(self.runs_conceded / self.overs_bowled, 1)
         return 0.0
+    
+@property
+def average(self):
+    if self.innings_played > 0:
+        return round(self.total_runs / self.innings_played, 1)
+    return 0
+
+@property
+def strike_rate(self):
+    if self.balls_faced > 0:
+        return round((self.total_runs / self.balls_faced) * 100, 1)
+    return 0
