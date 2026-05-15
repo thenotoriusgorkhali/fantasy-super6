@@ -6,8 +6,12 @@ def calculate_points_detailed(performance):
     runs_pts      = p.runs_scored
     boundary_pts  = p.fours
     six_pts       = p.sixes * 2
-    milestone     = 16 if p.runs_scored >= 100 else (8 if p.runs_scored >= 50 else 0)
-    duck_penalty  = -2 if (p.runs_scored == 0 and p.is_out) else 0
+    # Use best_score for milestone (e.g. scored 60* in one match = fifty bonus)
+    best = getattr(p, 'best_score_runs', p.runs_scored)
+    milestone     = 16 if best >= 100 else (8 if best >= 50 else 0)
+    # Duck = 0 runs AND out (use ducks field if multiple matches)
+    duck_count    = getattr(p, 'ducks', 0)
+    duck_penalty  = -2 * duck_count if duck_count > 0 else (-2 if (p.runs_scored == 0 and p.is_out) else 0)
 
     sr_bonus = 0
     if p.balls_faced >= 10:
@@ -57,15 +61,18 @@ def calculate_points_detailed(performance):
     }
 
     # ── FIELDING ──
-    catch_pts   = p.catches    * 8
-    stumping_pts = p.stumpings * 12
-    runout_pts  = p.run_outs   * 6
-    fielding_total = catch_pts + stumping_pts + runout_pts
+    catch_pts      = p.catches    * 8
+    stumping_pts   = p.stumpings  * 12
+    runout_pts     = p.run_outs   * 6
+    missed         = getattr(p, 'missed_catches', 0)
+    missed_penalty = missed * -5  # -5 pts per dropped catch
+    fielding_total = catch_pts + stumping_pts + runout_pts + missed_penalty
 
     bd['fielding'] = {
-        'catch_pts':     catch_pts,
-        'stumping_pts':  stumping_pts,
-        'runout_pts':    runout_pts,
+        'catch_pts':      catch_pts,
+        'stumping_pts':   stumping_pts,
+        'runout_pts':     runout_pts,
+        'missed_penalty': missed_penalty,
         'fielding_total': fielding_total,
     }
 

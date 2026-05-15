@@ -131,7 +131,9 @@
            data-ecbon="{% if item.bd %}{{ item.bd.bowling.economy_bonus }}{% else %}0{% endif %}"
            data-cpts="{% if item.bd %}{{ item.bd.fielding.catch_pts }}{% else %}0{% endif %}"
            data-stpts="{% if item.bd %}{{ item.bd.fielding.stumping_pts }}{% else %}0{% endif %}"
-           data-ropts="{% if item.bd %}{{ item.bd.fielding.runout_pts }}{% else %}0{% endif %}">
+           data-ropts="{% if item.bd %}{{ item.bd.fielding.runout_pts }}{% else %}0{% endif %}"
+           data-missedpen="{% if item.bd %}{{ item.bd.fielding.missed_penalty }}{% else %}0{% endif %}"
+           data-duckpen="{% if item.bd %}{{ item.bd.batting.duck_penalty }}{% else %}0{% endif %}">
 
         <div style="height:3px;background:{% if tp.role_in_team == 'Captain' %}linear-gradient(90deg,#ffd700,#ff8f00){% elif tp.role_in_team == 'Vice Captain' %}linear-gradient(90deg,#d0d0d0,#808080){% else %}{{ item.role_grad }}{% endif %};"></div>
         <div style="padding:12px 12px 10px;">
@@ -241,6 +243,7 @@ function openModal(el) {
   var mil = +d.mil, duck = +d.duck, sr = +d.sr;
   var wkPts = +d.wkpts, mdPts = +d.mdpts, wkBon = +d.wkbon, ecBon = +d.ecbon;
   var cPts = +d.cpts, stPts = +d.stpts, roPts = +d.ropts;
+  var missedPen = +d.missedpen, duckPen = +d.duckpen;
   var base = +d.base, pts = +d.pts, multi = +d.multi;
   var hasPf = d.hasperf === '1';
 
@@ -254,7 +257,8 @@ function openModal(el) {
     if (fours > 0)   bat += row('Fours (' + fours + ' × 1pt)', bndPts);
     if (sixes > 0)   bat += row('Sixes (' + sixes + ' × 2pts)', sixPts);
     if (mil > 0)     bat += row(runs >= 100 ? 'Century Bonus 🎉' : 'Half-century Bonus 🎉', mil, '#fcd34d');
-    if (duck < 0)    bat += row('Duck Penalty 🦆', duck);
+    var effectiveDuck = duckPen !== 0 ? duckPen : duck;
+    if (effectiveDuck < 0) bat += row('Duck Penalty 🦆', effectiveDuck);
     if (sr !== 0) {
       var srVal = balls > 0 ? Math.round(runs/balls*100) : 0;
       bat += row('Strike Rate Bonus (SR: ' + srVal + ')', sr, sr > 0 ? '#00e676' : '#f87171');
@@ -283,6 +287,7 @@ function openModal(el) {
     if (catches > 0)   field += row('Catches (' + catches + ' × 8pts)', cPts);
     if (stumpings > 0) field += row('Stumpings (' + stumpings + ' × 12pts)', stPts);
     if (runouts > 0)   field += row('Run Outs (' + runouts + ' × 6pts)', roPts);
+    if (missedPen < 0) field += row('Missed Catches Penalty ❌', missedPen);
     if (!field) field = noRow('No fielding contribution');
   } else { field = noRow('No match data yet'); }
   document.getElementById('bd-fielding').innerHTML = field;

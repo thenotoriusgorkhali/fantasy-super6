@@ -231,6 +231,10 @@
           <span style="font-family:Poppins;font-weight:800;font-size:16px;color:#93c5fd;">{{ total_runs }}</span>
         </div>
         <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Innings / Matches</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;"><span style="color:#00e676;">{{ innings }}</span> / {{ matches }}</span>
+        </div>
+        <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Average</span>
           <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;">{{ career_avg }}</span>
         </div>
@@ -241,6 +245,14 @@
         <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Fours / Sixes</span>
           <span style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;"><span style="color:#60a5fa;">{{ total_fours }}</span> / <span style="color:#a78bfa;">{{ total_sixes }}</span></span>
+        </div>
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">50s / 100s</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;"><span style="color:#fcd34d;">{{ fifties }}</span> / <span style="color:#ffd700;">{{ hundreds }}</span></span>
+        </div>
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Ducks</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:{% if ducks > 0 %}#f87171{% else %}#8899aa{% endif %};">{{ ducks }}</span>
         </div>
         <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Best Score</span>
@@ -266,12 +278,34 @@
           <span style="font-family:Poppins;font-weight:700;font-size:14px;color:{% if career_eco > 0 and career_eco <= 6 %}#00e676{% elif career_eco <= 8 %}#fcd34d{% elif career_eco > 0 %}#f87171{% else %}#fff{% endif %};">{% if career_eco > 0 %}{{ career_eco }}{% else %}—{% endif %}</span>
         </div>
         <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Maidens</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;">{{ maidens }}</span>
+        </div>
+        <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Best Bowling</span>
           <span style="font-family:Poppins;font-weight:800;font-size:15px;color:#ef4444;">{{ best_bowling }}</span>
         </div>
         <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Catches / Stumpings</span>
-          <span style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;">{{ total_catches }}</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:13px;color:#fff;"><span style="color:#c4b5fd;">{{ total_catches }}</span></span>
+        </div>
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Run Outs</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;">{{ run_outs }}</span>
+        </div>
+        {% if missed_catches > 0 %}
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#f87171;">Missed Catches</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#f87171;">{{ missed_catches }}</span>
+        </div>
+        {% endif %}
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Runs Conceded</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;">{{ player.runs_conceded }}</span>
+        </div>
+        <div class="hl-row">
+          <span style="font-family:Inter;font-size:12px;color:#8899aa;">Overs Bowled</span>
+          <span style="font-family:Poppins;font-weight:700;font-size:14px;color:#fff;">{{ player.overs_bowled }}</span>
         </div>
         <div class="hl-row">
           <span style="font-family:Inter;font-size:12px;color:#8899aa;">Bowling Style</span>
