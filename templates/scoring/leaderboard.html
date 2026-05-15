@@ -118,13 +118,15 @@
               </span>
             </td>
             
-            <td class="px-4 py-4 text-center">
-              {% if user.is_authenticated and team.user == user %}
-              <a href="/tournament/{{ tournament.id }}/my-team/" class="btn-secondary text-xs py-1.5 px-3">My Team →</a>
-              {% else %}
-              <a href="/tournament/{{ tournament.id }}/team/{{ team.id }}/" class="btn-secondary text-xs py-1.5 px-3">View →</a>
-              {% endif %}
-            </td>
+          <td class="px-4 py-4 text-center">
+  {% if user.is_authenticated and team.user == user %}
+  <a href="/tournament/{{ tournament.id }}/my-team/" class="btn-secondary text-xs py-1.5 px-3">My Team →</a>
+  {% elif tournament.is_open %}
+  <span class="text-xs text-gray-500" style="font-family:Inter;">🔒 Locked</span>
+  {% else %}
+  <a href="/tournament/{{ tournament.id }}/team/{{ team.id }}/" class="btn-secondary text-xs py-1.5 px-3">View →</a>
+  {% endif %}
+</td>
           </tr>
           {% endfor %}
         </tbody>

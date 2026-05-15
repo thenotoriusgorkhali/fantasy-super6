@@ -4,15 +4,6 @@ from scoring.models import PlayerPerformance
 
 def player_list(request):
     players = Player.objects.filter(is_active=True)
-
-    for player in players:
-        if player.matches_played > 0:
-            player.career_avg = player.career_average
-            player.career_sr  = player.career_strike_rate
-        else:
-            player.career_avg = 0
-            player.career_sr  = 0
-
     return render(request, 'players/list.html', {'players': players})
 
 def player_detail(request, pk):
