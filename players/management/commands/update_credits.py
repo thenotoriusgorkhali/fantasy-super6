@@ -25,11 +25,19 @@ def round_to_half(val):
 
 
 def credit_delta(fantasy_pts):
-    if fantasy_pts >= 150: return  1.0
-    if fantasy_pts >= 100: return  0.5
-    if fantasy_pts >= 60:  return  0.0
-    if fantasy_pts >= 30:  return -0.5
-    return -1.0
+    if fantasy_pts >= 250: return  2.0
+    if fantasy_pts >= 225: return  1.5
+    if fantasy_pts >= 200: return  1.25
+    if fantasy_pts >= 175: return  1.0
+    if fantasy_pts >= 150: return  0.75
+    if fantasy_pts >= 110: return  0.0
+    if fantasy_pts >= 100: return -1.0
+    if fantasy_pts >= 85:  return -1.25
+    if fantasy_pts >= 65:  return -1.5
+    if fantasy_pts >= 50:  return -1.75
+    if fantasy_pts >= 40:  return -2.0
+    if fantasy_pts >= 30:  return -2.5
+    return -2.5
 
 
 class Command(BaseCommand):

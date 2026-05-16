@@ -52,11 +52,19 @@ class TournamentAdmin(admin.ModelAdmin):
             return float(Decimal(str(v*2)).quantize(Decimal('1'), rounding=ROUND_HALF_UP) / 2)
 
         def delta(pts):
-            if pts >= 150: return  1.0
-            if pts >= 100: return  0.5
-            if pts >= 60:  return  0.0
-            if pts >= 30:  return -0.5
-            return -1.0
+            if pts >= 250: return  2.0
+            if pts >= 225: return  1.5
+            if pts >= 200: return  1.25
+            if pts >= 175: return  1.0
+            if pts >= 150: return  0.75
+            if pts >= 110: return  0.0
+            if pts >= 100: return -1.0
+            if pts >= 85:  return -1.25
+            if pts >= 65:  return -1.5
+            if pts >= 50:  return -1.75
+            if pts >= 40:  return -2.0
+            if pts >= 30:  return -2.5
+            return -2.5
 
         total = 0
         for t in queryset:
